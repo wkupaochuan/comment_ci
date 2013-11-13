@@ -895,25 +895,32 @@ class CI_Loader {
 		// Was the path included with the class name?
 		// We look for a slash to determine this
 		$subdir = '';
+		//如果class变量中仍然存在/，则表明这是个子路径(因为已经将两端的/去掉了)
 		if (($last_slash = strrpos($class, '/')) !== FALSE)
 		{
 			// Extract the path
+			// 取出子路径
 			$subdir = substr($class, 0, $last_slash + 1);
 
 			// Get the filename from the path
+			// 获取单纯的class名称
 			$class = substr($class, $last_slash + 1);
 		}
 
 		// We'll test for both lowercase and capitalized versions of the file name
+		// 文件名字的大小写无关紧要，因为这里会测试全部大小写;也就代表在ci中类名是不区分大小写的
+		// ucfirst--将字符串首字母大写
 		foreach (array(ucfirst($class), strtolower($class)) as $class)
 		{
 			$subclass = APPPATH.'libraries/'.$subdir.config_item('subclass_prefix').$class.'.php';
 
 			// Is this a class extension request?
+			// 要加载的类是否继承了system下的Library类
 			if (file_exists($subclass))
 			{
 				$baseclass = BASEPATH.'libraries/'.ucfirst($class).'.php';
 
+				// 既然是子类，父类必须存在; 如果不存在则显示error日志和内容
 				if ( ! file_exists($baseclass))
 				{
 					log_message('error', "Unable to load the requested class: ".$class);
@@ -921,6 +928,7 @@ class CI_Loader {
 				}
 
 				// Safety:  Was the class already loaded by a previous call?
+				// 是否已经加载这个类
 				if (in_array($subclass, $this->_ci_loaded_files))
 				{
 					// Before we deem this to be a duplicate request, let's see
@@ -931,19 +939,23 @@ class CI_Loader {
 						$CI =& get_instance();
 						if ( ! isset($CI->$object_name))
 						{
+							//实例化类
 							return $this->_ci_init_class($class, config_item('subclass_prefix'), $params, $object_name);
 						}
 					}
 
+					
 					$is_duplicate = TRUE;
 					log_message('debug', $class." class already loaded. Second attempt ignored.");
 					return;
 				}
 
+				// 如果还未加载这个类.同时包含子类和父类文件,并将类名(包含路径一起加入到已经加载类名数组)
 				include_once($baseclass);
 				include_once($subclass);
 				$this->_ci_loaded_files[] = $subclass;
 
+				//实例化类
 				return $this->_ci_init_class($class, config_item('subclass_prefix'), $params, $object_name);
 			}
 
@@ -1007,6 +1019,7 @@ class CI_Loader {
 	/**
 	 * Instantiates a class
 	 *
+	 * 实例化一个类
 	 * @param	string
 	 * @param	string
 	 * @param	bool
