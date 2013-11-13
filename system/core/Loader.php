@@ -38,28 +38,28 @@ class CI_Loader {
 	protected $_ci_ob_level;
 	/**
 	 * List of paths to load views from
-	 *
+	 * 需要加载的view的路径数组
 	 * @var array
 	 * @access protected
 	 */
 	protected $_ci_view_paths		= array();
 	/**
 	 * List of paths to load libraries from
-	 *
+	 * 需要加载的library的路径数组
 	 * @var array
 	 * @access protected
 	 */
 	protected $_ci_library_paths	= array();
 	/**
 	 * List of paths to load models from
-	 *
+	 * 需要加载的model路径数组
 	 * @var array
 	 * @access protected
 	 */
 	protected $_ci_model_paths		= array();
 	/**
 	 * List of paths to load helpers from
-	 *
+	 * 需要加载的helper路径数组
 	 * @var array
 	 * @access protected
 	 */
@@ -67,28 +67,28 @@ class CI_Loader {
 	/**
 	 * List of loaded base classes
 	 * Set by the controller class
-	 *
+	 * 已经加载的基础类数组，内容由控制器类生成
 	 * @var array
 	 * @access protected
 	 */
 	protected $_base_classes		= array(); // Set by the controller class
 	/**
 	 * List of cached variables
-	 *
+	 * 缓存变量数组
 	 * @var array
 	 * @access protected
 	 */
 	protected $_ci_cached_vars		= array();
 	/**
 	 * List of loaded classes
-	 *
+	 * 已经加载的类数组
 	 * @var array
 	 * @access protected
 	 */
 	protected $_ci_classes			= array();
 	/**
 	 * List of loaded files
-	 *
+	 * 
 	 * @var array
 	 * @access protected
 	 */
@@ -186,13 +186,16 @@ class CI_Loader {
 	 * This function lets users load and instantiate classes.
 	 * It is designed to be called from a user's app controllers.
 	 *
+	 *	这个方法允许自己和用户在应用程序中调用，并加载某个类
+	 *
 	 * @param	string	the name of the class
 	 * @param	mixed	the optional parameters
-	 * @param	string	an optional object name
+	 * @param	string	an optional object name//这个obj_name指的是，你可以指定给超类CI的成员变量的名字，可以按自己的喜好指定，方便使用
 	 * @return	void
 	 */
 	public function library($library = '', $params = NULL, $object_name = NULL)
 	{
+		//如果一次加载多个类，则递归调用
 		if (is_array($library))
 		{
 			foreach ($library as $class)
@@ -203,11 +206,13 @@ class CI_Loader {
 			return;
 		}
 
+		//如果未指定需要加载的类或者已经加载过这个类，直接返回false
 		if ($library == '' OR isset($this->_base_classes[$library]))
 		{
 			return FALSE;
 		}
 
+		//参数params或者为空或者是一个数组
 		if ( ! is_null($params) && ! is_array($params))
 		{
 			$params = NULL;
@@ -326,6 +331,7 @@ class CI_Loader {
 		$CI =& get_instance();
 
 		// Do we even need to load the database class?
+		//是否已经加载了DB类，并且不需要返回
 		if (class_exists('CI_DB') AND $return == FALSE AND $active_record == NULL AND isset($CI->db) AND is_object($CI->db))
 		{
 			return FALSE;
@@ -333,6 +339,7 @@ class CI_Loader {
 
 		require_once(BASEPATH.'database/DB.php');
 
+		//需要返回则不指定超类ci->db，否则将建立的连接给ci->db
 		if ($return === TRUE)
 		{
 			return DB($params, $active_record);
@@ -881,6 +888,8 @@ class CI_Loader {
 		// Get the class name, and while we're at it trim any slashes.
 		// The directory path can be included as part of the class name,
 		// but we don't want a leading slash
+		//我们可以将类的名字指定为路径，也可以用.php的类名;
+		//但是在加载类的时候会统一去掉后缀,并把前后的路径符号/去掉
 		$class = str_replace('.php', '', trim($class, '/'));
 
 		// Was the path included with the class name?
@@ -1137,6 +1146,7 @@ class CI_Loader {
 		}
 
 		// Load any custom config file
+		//加载自定义并且指定自动加载的配置文件,加载到$ci->config中
 		if (count($autoload['config']) > 0)
 		{
 			$CI =& get_instance();
@@ -1147,6 +1157,7 @@ class CI_Loader {
 		}
 
 		// Autoload helpers and languages
+		//加载自定义的
 		foreach (array('helper', 'language') as $type)
 		{
 			if (isset($autoload[$type]) AND count($autoload[$type]) > 0)
@@ -1163,16 +1174,20 @@ class CI_Loader {
 		}
 
 		// Load libraries
+		//加载类库
 		if (isset($autoload['libraries']) AND count($autoload['libraries']) > 0)
 		{
 			// Load the database driver.
+			//加载数据库驱动类,指定给ci->db或者直接返回建立的连接
 			if (in_array('database', $autoload['libraries']))
 			{
 				$this->database();
+				//加载完毕后,去除database类库
 				$autoload['libraries'] = array_diff($autoload['libraries'], array('database'));
 			}
 
 			// Load all other libraries
+			//加载其他的类
 			foreach ($autoload['libraries'] as $item)
 			{
 				$this->library($item);
