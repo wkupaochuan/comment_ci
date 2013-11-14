@@ -45,7 +45,7 @@ class CI_Loader {
 	protected $_ci_view_paths		= array();
 	/**
 	 * List of paths to load libraries from
-	 * 需要加载的library的路径数组
+	 * 可能存放library的路径；最近本的是APPPATH和BASEPATH；其次有可能加载另外的APPPATH
 	 * @var array
 	 * @access protected
 	 */
@@ -877,10 +877,12 @@ class CI_Loader {
 	 * Load class
 	 *
 	 * This function loads the requested class.
-	 *
-	 * @param	string	the item that is being loaded
-	 * @param	mixed	any additional parameters
-	 * @param	string	an optional object name
+	 * 加载某个类
+	 * 这个方法的主要流程就是--先看是否是一个子类，然后按照不是子类(当然每次都需要在BASEPATH和每个apppath中搜索)
+	 * 不明白的地方是为什么只搜索libraries
+	 * @param	string	the item that is being loaded 需要加载的类
+	 * @param	mixed	any additional parameters	参数
+	 * @param	string	an optional object name  类加载完是要赋值给超类CI的,通过这个参数可以指定CI成员变量的名字,不指定则使用类名
 	 * @return	void
 	 */
 	protected function _ci_load_class($class, $params = NULL, $object_name = NULL)
@@ -908,16 +910,19 @@ class CI_Loader {
 		}
 
 		// We'll test for both lowercase and capitalized versions of the file name
-		// 文件名字的大小写无关紧要，因为这里会测试全部大小写;也就代表在ci中类名是不区分大小写的
+		// 这里会遍历全部小写的class和首字母大写的class
 		// ucfirst--将字符串首字母大写
 		foreach (array(ucfirst($class), strtolower($class)) as $class)
 		{
+			// 先假定class是application/libraries/subdir/config_item('subclass_prefix').$class.php
+			// 即这是一个 继承了system中的某个library类的子类
 			$subclass = APPPATH.'libraries/'.$subdir.config_item('subclass_prefix').$class.'.php';
 
 			// Is this a class extension request?
-			// 要加载的类是否继承了system下的Library类
+			// 的确是library的子类
 			if (file_exists($subclass))
 			{
+				// 获取system中library类的全路径
 				$baseclass = BASEPATH.'libraries/'.ucfirst($class).'.php';
 
 				// 既然是子类，父类必须存在; 如果不存在则显示error日志和内容
@@ -928,12 +933,13 @@ class CI_Loader {
 				}
 
 				// Safety:  Was the class already loaded by a previous call?
-				// 是否已经加载这个类
+				// 如果子类的路径经被添加过
 				if (in_array($subclass, $this->_ci_loaded_files))
 				{
 					// Before we deem this to be a duplicate request, let's see
 					// if a custom object name is being supplied.  If so, we'll
 					// return a new instance of the object
+					// 如果指定了要赋值给超类CI的属性名称, 这种情况需要判断超类CI是否已经包含了这个属性；如果没有包含，则重新加载并赋值给这个属性
 					if ( ! is_null($object_name))
 					{
 						$CI =& get_instance();
@@ -944,39 +950,46 @@ class CI_Loader {
 						}
 					}
 
-					
+					// 如果没有指定属性名称，则表明已经加载过这个子类；直接返回即可
 					$is_duplicate = TRUE;
 					log_message('debug', $class." class already loaded. Second attempt ignored.");
 					return;
 				}
 
-				// 如果还未加载这个类.同时包含子类和父类文件,并将类名(包含路径一起加入到已经加载类名数组)
+				// 如果还没有加载这个子类，则把子类和父类文件都包含进来
 				include_once($baseclass);
 				include_once($subclass);
+				// 将子类文件路径添加到已经加载的类路径数组
 				$this->_ci_loaded_files[] = $subclass;
 
 				//实例化类
 				return $this->_ci_init_class($class, config_item('subclass_prefix'), $params, $object_name);
-			}
+			} //如果是library子类的情况结束
 
 			// Lets search for the requested library file and load it.
+			// 下面的情况是这个类不是继承了system中library的子类;而是自己定义的一个全新的类
 			$is_duplicate = FALSE;
+			// 分别在BASEPATH和APPATH还有各个新的application中的library中查找这个类文件
 			foreach ($this->_ci_library_paths as $path)
 			{
 				$filepath = $path.'libraries/'.$subdir.$class.'.php';
 
 				// Does the file exist?  No?  Bummer...
+				// 类文件不存在这个文件夹中则直接跳过此次循环
 				if ( ! file_exists($filepath))
 				{
 					continue;
 				}
 
+				// 下面的情况时在这个文件夹中找到了这个类文件
 				// Safety:  Was the class already loaded by a previous call?
+				// 如果已经加载过这个类文件
 				if (in_array($filepath, $this->_ci_loaded_files))
 				{
 					// Before we deem this to be a duplicate request, let's see
 					// if a custom object name is being supplied.  If so, we'll
 					// return a new instance of the object
+					// 虽然已经加载过这个路径下的类文件，但是如果超类CI并没有这个属性，则仍然要将这个类实例化并赋值给这个属性
 					if ( ! is_null($object_name))
 					{
 						$CI =& get_instance();
@@ -991,14 +1004,18 @@ class CI_Loader {
 					return;
 				}
 
+				// 如果没有加载过这个类文件，则将其包含进来, 并加入到已经加载的类文件(包含路径)数组
 				include_once($filepath);
 				$this->_ci_loaded_files[] = $filepath;
+				// 实例化这个类(不带前缀)(因为这不是子类)
 				return $this->_ci_init_class($class, '', $params, $object_name);
 			}
 
 		} // END FOREACH
 
 		// One last attempt.  Maybe the library is in a subdirectory, but it wasn't specified?
+		// 这里是最后的尝试。如果前面没有加载成功,并且subdir是空，有可能是因为开发者的路径是这样的APPPATH/library/class/class
+		// 所以这里做了这样的修正，并且递归调用，（当然不用担心会递归死循环,因为下面会判断如果subdir不为空，且没找到则报错了，第一次递归就已经是subdir!=''了，所以不会死循环）
 		if ($subdir == '')
 		{
 			$path = strtolower($class).'/'.$class;
@@ -1007,6 +1024,7 @@ class CI_Loader {
 
 		// If we got this far we were unable to find the requested class.
 		// We do not issue errors if the load call failed due to a duplicate request
+		// 如果仍然没有找到需要加载的类，那么基本就是开发者调用错误了,但是这里的is_duplicate不是很明白
 		if ($is_duplicate == FALSE)
 		{
 			log_message('error', "Unable to load the requested class: ".$class);
@@ -1020,6 +1038,7 @@ class CI_Loader {
 	 * Instantiates a class
 	 *
 	 * 实例化一个类
+	 * 总体来说这个方法的主要过程就是确定两个变量$name(需要加载的类的名称);$classvar(需要记录的已经加载的类的数组)
 	 * @param	string
 	 * @param	string
 	 * @param	bool
