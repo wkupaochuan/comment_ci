@@ -879,6 +879,10 @@ class CI_Loader {
 	 * This function loads the requested class.
 	 * 加载某个类
 	 * 这个方法的主要流程就是--先看是否是一个子类，然后按照不是子类(当然每次都需要在BASEPATH和每个apppath中搜索)
+	 * 他的主要作用还是判断是:
+	 * 	1--否需要增加前缀
+	 *  2--同时也是最为重要的一点儿就是已经加载了相应的类文件
+	 *  3--将class简化为单纯的类名，在下游实例化方法中直接使用(+前缀)即可，真正的实例化在下游的_ci_init_class
 	 * 不明白的地方是为什么只搜索libraries
 	 * @param	string	the item that is being loaded 需要加载的类
 	 * @param	mixed	any additional parameters	参数
@@ -1039,22 +1043,26 @@ class CI_Loader {
 	 *
 	 * 实例化一个类
 	 * 总体来说这个方法的主要过程就是确定两个变量$name(需要加载的类的名称);$classvar(需要记录的已经加载的类的数组)
-	 * @param	string
+	 * 这个方法不需要关心类文件，因为在上游已经将需要加载的类文件包含进来了
+	 * 这个方法不需要关心类名的带路径，因为上游方法已经将类名充分简化至只有类名(前缀不带)
+	 * @param	string	需要实例化的类名(可能带有.php后缀)
 	 * @param	string
 	 * @param	bool
-	 * @param	string	an optional object name
+	 * @param	string	an optional object name 
 	 * @return	null
 	 */
 	protected function _ci_init_class($class, $prefix = '', $config = FALSE, $object_name = NULL)
 	{
 		// Is there an associated config file for this class?  Note: these should always be lowercase
+		// 如果指定config为null，需要到各个application/config文件夹下查找是否有相应的配置文件(配置文件小写或者首字母大写都会被检查)
+		// 找到配置文件则跳出
 		if ($config === NULL)
 		{
 			// Fetch the config paths containing any package paths
 			// 获取超类CI的成员变量config
 			$config_component = $this->_ci_get_component('config');
 
-			//获取config的所有已经加载的配置文件的路径数组
+			//_config_paths返回的是各个application的路径数组
 			if (is_array($config_component->_config_paths))
 			{
 				// Break on the first found file, thus package files
@@ -1087,8 +1095,9 @@ class CI_Loader {
 					}
 				}
 			}
-		}
+		}// 指定config为null结束
 
+		//判定是否需要增加类名前缀
 		if ($prefix == '')
 		{
 			if (class_exists('CI_'.$class))
