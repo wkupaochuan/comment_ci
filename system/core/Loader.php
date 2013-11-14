@@ -159,6 +159,8 @@ class CI_Loader {
 	/**
 	 * Is Loaded
 	 *
+	 * 判定某个class是否已经加载
+	 * 如果已经加载就返回类
 	 * A utility function to test if a class is in the self::$_ci_classes array.
 	 * This function returns the object name if the class tested for is loaded,
 	 * and returns FALSE if it isn't.
@@ -319,7 +321,7 @@ class CI_Loader {
 
 	/**
 	 * Database Loader
-	 *
+	 * 加载数据库实例
 	 * @param	string	the DB credentials
 	 * @param	bool	whether to return the DB object
 	 * @param	bool	whether to enable active record (this allows us to override the config setting)
@@ -644,7 +646,7 @@ class CI_Loader {
 	 * Add Package Path
 	 *
 	 * Prepends a parent path to the library, model, helper, and config path arrays
-	 *
+	 * 这里可能有需要加载的第三方的东西，所以需要把父级的根目录加入到这些路径数组中去
 	 * @param	string
 	 * @param 	boolean
 	 * @return	void
@@ -670,7 +672,8 @@ class CI_Loader {
 	 * Get Package Paths
 	 *
 	 * Return a list of all package paths, by default it will ignore BASEPATH.
-	 *
+	 * 返回根目录路径数组(basepath/apppath等)
+	 * _ci_library_paths中包含basepath,但是_ci_model_paths不包含basepath
 	 * @param	string
 	 * @return	void
 	 */
@@ -686,15 +689,18 @@ class CI_Loader {
 	 *
 	 * Remove a path from the library, model, and helper path arrays if it exists
 	 * If no path is provided, the most recently added path is removed.
-	 *
+	 * 去除一个package_path，如果存在
+	 * 如果不存在则去除一个最近添加的
 	 * @param	type
 	 * @param 	bool
 	 * @return	type
 	 */
 	public function remove_package_path($path = '', $remove_config_path = TRUE)
 	{
+		//获取超类CI的成员变量config
 		$config =& $this->_ci_get_component('config');
 
+		//如果没有指定path，则去除队列头部的一个，(因为添加的时候使用的是unshift)
 		if ($path == '')
 		{
 			$void = array_shift($this->_ci_library_paths);
@@ -706,6 +712,7 @@ class CI_Loader {
 		else
 		{
 			$path = rtrim($path, '/').'/';
+			//在library/model/helper中直接去除(unset)
 			foreach (array('_ci_library_paths', '_ci_model_paths', '_ci_helper_paths') as $var)
 			{
 				if (($key = array_search($path, $this->{$var})) !== FALSE)
@@ -714,11 +721,13 @@ class CI_Loader {
 				}
 			}
 
+			//去除view中的package
 			if (isset($this->_ci_view_paths[$path.'views/']))
 			{
 				unset($this->_ci_view_paths[$path.'views/']);
 			}
 
+			//去除config中的package
 			if (($key = array_search($path, $config->_config_paths)) !== FALSE)
 			{
 				unset($config->_config_paths[$key]);
@@ -726,6 +735,7 @@ class CI_Loader {
 		}
 
 		// make sure the application default paths are still in the array
+		// 确保这个类初始化的时候默认的package是存在的(采用先merge后unique的方式)
 		$this->_ci_library_paths = array_unique(array_merge($this->_ci_library_paths, array(APPPATH, BASEPATH)));
 		$this->_ci_helper_paths = array_unique(array_merge($this->_ci_helper_paths, array(APPPATH, BASEPATH)));
 		$this->_ci_model_paths = array_unique(array_merge($this->_ci_model_paths, array(APPPATH)));
@@ -1172,6 +1182,7 @@ class CI_Loader {
 	 */
 	private function _ci_autoloader()
 	{
+		//包含autoload.php文件
 		if (defined('ENVIRONMENT') AND file_exists(APPPATH.'config/'.ENVIRONMENT.'/autoload.php'))
 		{
 			include(APPPATH.'config/'.ENVIRONMENT.'/autoload.php');
@@ -1181,12 +1192,14 @@ class CI_Loader {
 			include(APPPATH.'config/autoload.php');
 		}
 
+		//如果没有把配置文件包含进来；或者配置文件中没有包含$autoload数组，报错
 		if ( ! isset($autoload))
 		{
 			return FALSE;
 		}
 
 		// Autoload packages
+		// 加载第三方的文件路径
 		if (isset($autoload['packages']))
 		{
 			foreach ($autoload['packages'] as $package_path)
@@ -1257,7 +1270,7 @@ class CI_Loader {
 	 * Object to Array
 	 *
 	 * Takes an object as input and converts the class variables to array key/vals
-	 *
+	 * 将对象转化为数组
 	 * @param	object
 	 * @return	array
 	 */
@@ -1287,7 +1300,8 @@ class CI_Loader {
 	 * Prep filename
 	 *
 	 * This function preps the name of various items to make loading them more reliable.
-	 *
+	 * 将一组文件名的后缀和.php后缀去掉，并加上原来的后缀，最后返回小写字符串
+	 * 没明白这个方法想做什么
 	 * @param	mixed
 	 * @param 	string
 	 * @return	array
