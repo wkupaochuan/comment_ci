@@ -42,7 +42,7 @@ class CI_Config {
 	var $is_loaded = array();
 	/**
 	 * List of paths to search when trying to load a config file
-	 *
+	 * 当需要加载配置文件的时候，搜索配置文件的路径
 	 * @var array
 	 */
 	var $_config_paths = array(APPPATH);

@@ -1032,8 +1032,10 @@ class CI_Loader {
 		if ($config === NULL)
 		{
 			// Fetch the config paths containing any package paths
+			// 获取超类CI的成员变量config
 			$config_component = $this->_ci_get_component('config');
 
+			//获取config的所有已经加载的配置文件的路径数组
 			if (is_array($config_component->_config_paths))
 			{
 				// Break on the first found file, thus package files
@@ -1043,6 +1045,7 @@ class CI_Loader {
 					// We test for both uppercase and lowercase, for servers that
 					// are case-sensitive with regard to file names. Check for environment
 					// first, global next
+					// 查找是否有相应的配置文件
 					if (defined('ENVIRONMENT') AND file_exists($path .'config/'.ENVIRONMENT.'/'.strtolower($class).'.php'))
 					{
 						include($path .'config/'.ENVIRONMENT.'/'.strtolower($class).'.php');
@@ -1088,6 +1091,7 @@ class CI_Loader {
 		}
 
 		// Is the class name valid?
+		// 需要加载的类必须存在
 		if ( ! class_exists($name))
 		{
 			log_message('error', "Non-existent class: ".$name);
@@ -1098,19 +1102,24 @@ class CI_Loader {
 		// Was a custom class name supplied?  If so we'll use it
 		$class = strtolower($class);
 
+		//是否指定了属性名字
 		if (is_null($object_name))
 		{
+			// 没指定属性名字，则取_ci_varmap中查找是否已经使用过$class, 如果没有使用则使用$class, 否则使用已经加载的
 			$classvar = ( ! isset($this->_ci_varmap[$class])) ? $class : $this->_ci_varmap[$class];
 		}
+		//指定了属性名字，则直接使用
 		else
 		{
 			$classvar = $object_name;
 		}
 
 		// Save the class name and object name
+		// 将即将加载的类(小写), 加入到_ci_classes
 		$this->_ci_classes[$class] = $classvar;
 
 		// Instantiate the class
+		// 实例化类，并将属性赋值给CI超类
 		$CI =& get_instance();
 		if ($config !== NULL)
 		{
@@ -1233,12 +1242,13 @@ class CI_Loader {
 
 	/**
 	 * Get a reference to a specific library or model
-	 *
-	 * @param 	string
+	 * 返回超类CI的某个成员变量(library或者model)
+	 * @param 	string 成员变量的名称
 	 * @return	bool
 	 */
 	protected function &_ci_get_component($component)
 	{
+		//获取超类实例
 		$CI =& get_instance();
 		return $CI->$component;
 	}
