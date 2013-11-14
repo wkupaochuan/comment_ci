@@ -118,11 +118,12 @@ class CI_Loader {
 
 	/**
 	 * Constructor
-	 *
+	 * 构造函数
 	 * Sets the path to the view files and gets the initial output buffering level
 	 */
 	public function __construct()
-	{
+	{	
+		//ob_level不了解
 		$this->_ci_ob_level  = ob_get_level();
 		$this->_ci_library_paths = array(APPPATH, BASEPATH);
 		$this->_ci_helper_paths = array(APPPATH, BASEPATH);
@@ -136,7 +137,7 @@ class CI_Loader {
 
 	/**
 	 * Initialize the Loader
-	 *
+	 * 这个方法仅仅被CI_Controller调用一次
 	 * This method is called once in CI_Controller.
 	 *
 	 * @param 	array
@@ -144,13 +145,17 @@ class CI_Loader {
 	 */
 	public function initialize()
 	{
+		//将已经加载的各个缓存数组都清空
 		$this->_ci_classes = array();
 		$this->_ci_loaded_files = array();
 		$this->_ci_models = array();
+		//获取在CI_Controller之前已经加载的基类
 		$this->_base_classes =& is_loaded();
 
+		//加载所有需要自动加载的类
 		$this->_ci_autoloader();
 
+		//返回load
 		return $this;
 	}
 
@@ -1176,12 +1181,23 @@ class CI_Loader {
 	 *
 	 * The config/autoload.php file contains an array that permits sub-systems,
 	 * libraries, and helpers to be loaded automatically.
+	 * 
+	 * 这个方法是被CI_Controller调用的，自动加载配置文件中指定的类
 	 *
 	 * @param	array
 	 * @return	void
 	 */
 	private function _ci_autoloader()
 	{
+		
+// 		$autoload['packages'] = array();
+// 		$autoload['libraries'] = array();
+// 		$autoload['helper'] = array();
+// 		$autoload['config'] = array();
+// 		$autoload['language'] = array();
+// 		$autoload['model'] = array();
+
+		
 		//包含autoload.php文件
 		if (defined('ENVIRONMENT') AND file_exists(APPPATH.'config/'.ENVIRONMENT.'/autoload.php'))
 		{
@@ -1199,7 +1215,7 @@ class CI_Loader {
 		}
 
 		// Autoload packages
-		// 加载第三方的文件路径
+		// 第三方路径
 		if (isset($autoload['packages']))
 		{
 			foreach ($autoload['packages'] as $package_path)
@@ -1209,9 +1225,10 @@ class CI_Loader {
 		}
 
 		// Load any custom config file
-		//加载自定义并且指定自动加载的配置文件,加载到$ci->config中
+		// 加载配置文件
 		if (count($autoload['config']) > 0)
 		{
+			// 通过获取超对象CI，并将需要加载的配置文件的名字传递给config变量,通过调用core/Config.php->load加载相应配置文件
 			$CI =& get_instance();
 			foreach ($autoload['config'] as $key => $val)
 			{
@@ -1220,7 +1237,7 @@ class CI_Loader {
 		}
 
 		// Autoload helpers and languages
-		//加载自定义的
+		// 加载helper和languages
 		foreach (array('helper', 'language') as $type)
 		{
 			if (isset($autoload[$type]) AND count($autoload[$type]) > 0)
@@ -1231,17 +1248,18 @@ class CI_Loader {
 
 		// A little tweak to remain backward compatible
 		// The $autoload['core'] item was deprecated
+		// 完全为了向前兼容core数组
 		if ( ! isset($autoload['libraries']) AND isset($autoload['core']))
 		{
 			$autoload['libraries'] = $autoload['core'];
 		}
 
 		// Load libraries
-		//加载类库
+		// 加载library
 		if (isset($autoload['libraries']) AND count($autoload['libraries']) > 0)
 		{
 			// Load the database driver.
-			//加载数据库驱动类,指定给ci->db或者直接返回建立的连接
+			// 加载数据库驱动
 			if (in_array('database', $autoload['libraries']))
 			{
 				$this->database();
@@ -1258,6 +1276,7 @@ class CI_Loader {
 		}
 
 		// Autoload models
+		// 加载models
 		if (isset($autoload['model']))
 		{
 			$this->model($autoload['model']);
