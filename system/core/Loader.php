@@ -193,16 +193,15 @@ class CI_Loader {
 	 * This function lets users load and instantiate classes.
 	 * It is designed to be called from a user's app controllers.
 	 *
-	 *	这个方法允许自己和用户在应用程序中调用，并加载某个类
-	 *
-	 * @param	string	the name of the class
-	 * @param	mixed	the optional parameters
+	 * 加载library(包括basepath和appath下的)，并赋值给超对象CI
+	 * @param	string	the name of the class 可以是类名或者类名数组
+	 * @param	mixed	the optional parameters 实例化类需要的参数
 	 * @param	string	an optional object name//这个obj_name指的是，你可以指定给超类CI的成员变量的名字，可以按自己的喜好指定，方便使用
 	 * @return	void
 	 */
 	public function library($library = '', $params = NULL, $object_name = NULL)
 	{
-		//如果一次加载多个类，则递归调用
+		// 如果指定了类名数组，就递归这个方法
 		if (is_array($library))
 		{
 			foreach ($library as $class)
@@ -213,7 +212,7 @@ class CI_Loader {
 			return;
 		}
 
-		//如果未指定需要加载的类或者已经加载过这个类，直接返回false
+		// 采用单例的模式，不会重复实例化某个类
 		if ($library == '' OR isset($this->_base_classes[$library]))
 		{
 			return FALSE;
@@ -234,7 +233,10 @@ class CI_Loader {
 	 * Model Loader
 	 *
 	 * This function lets users load and instantiate models.
-	 *
+	 * 加载一个model并赋值给超对象CI的某个属性
+	 * 有几点需要注意
+	 * 	1--单例模式的key，是指定的$model的除去路径后的纯粹文件名
+	 *  2--CI中规定model文件名字母都是小写,model的类名首字母大写
 	 * @param	string	the name of the class
 	 * @param	string	name for the model
 	 * @param	bool	database connection
@@ -242,6 +244,7 @@ class CI_Loader {
 	 */
 	public function model($model, $name = '', $db_conn = FALSE)
 	{
+		// 如果指定了一组model则递归这个函数
 		if (is_array($model))
 		{
 			foreach ($model as $babe)
@@ -251,6 +254,7 @@ class CI_Loader {
 			return;
 		}
 
+		// 必须指定model
 		if ($model == '')
 		{
 			return;
@@ -259,6 +263,7 @@ class CI_Loader {
 		$path = '';
 
 		// Is the model in a sub-folder? If so, parse out the filename and path.
+		// 如果model存在子路径中，则分别去除路径和纯粹的model名字
 		if (($last_slash = strrpos($model, '/')) !== FALSE)
 		{
 			// The path is in front of the last slash
@@ -273,11 +278,13 @@ class CI_Loader {
 			$name = $model;
 		}
 
+		// 单例模式，非重复加载
 		if (in_array($name, $this->_ci_models, TRUE))
 		{
 			return;
 		}
 
+		// 获取超对象CI，检查是否已经制定过这个属性
 		$CI =& get_instance();
 		if (isset($CI->$name))
 		{
@@ -288,6 +295,7 @@ class CI_Loader {
 
 		foreach ($this->_ci_model_paths as $mod_path)
 		{
+			// 在每个app中查找这个model,要知道model文件名字全是小写
 			if ( ! file_exists($mod_path.'models/'.$path.$model.'.php'))
 			{
 				continue;
@@ -308,10 +316,13 @@ class CI_Loader {
 				load_class('Model', 'core');
 			}
 
+			// 把model文件包含进来
 			require_once($mod_path.'models/'.$path.$model.'.php');
 
+			// 类名的首字符大写
 			$model = ucfirst($model);
 
+			// 实例化model，并赋值给超对象CI的属性$name
 			$CI->$name = new $model();
 
 			$this->_ci_models[] = $name;
@@ -500,19 +511,25 @@ class CI_Loader {
 	 * Load Helper
 	 *
 	 * This function loads the specified helper file.
-	 *
+	 * 加载某个helper，有两点需要注意
+	 * 	1--helper中仅仅是方法，并不是一个类，所以只需要inlude进来即可
+	 * 	2--调用Helper中的方法，在加载完之后直接使用即可
+	 *  3--CI中规定每个helper必须以_helper后缀
 	 * @param	mixed
 	 * @return	void
 	 */
 	public function helper($helpers = array())
 	{
+		//确保helpers数组内的字符串都是_helper后缀(CI中规定helper必须加上_helper后缀)
 		foreach ($this->_ci_prep_filename($helpers, '_helper') as $helper)
 		{
+			// 采用单例模式，不重复加载
 			if (isset($this->_ci_helpers[$helper]))
 			{
 				continue;
 			}
 
+			// 先假定这个类是继承的basepath中的helper
 			$ext_helper = APPPATH.'helpers/'.config_item('subclass_prefix').$helper.'.php';
 
 			// Is this a helper extension request?
@@ -520,20 +537,24 @@ class CI_Loader {
 			{
 				$base_helper = BASEPATH.'helpers/'.$helper.'.php';
 
+				// 父类必须存在
 				if ( ! file_exists($base_helper))
 				{
 					show_error('Unable to load the requested file: helpers/'.$helper.'.php');
 				}
 
+				// 将子类和父类文件都包含进来
 				include_once($ext_helper);
 				include_once($base_helper);
 
+				// 将加载完的Helper名字放入数组,并跳过此次循环
 				$this->_ci_helpers[$helper] = TRUE;
 				log_message('debug', 'Helper loaded: '.$helper);
 				continue;
-			}
+			}// 假定继承basepath结束
 
 			// Try to load the helper
+			// 下面的逻辑是这个helper非继承自basepath, 则到baspath和apppath中分别搜索
 			foreach ($this->_ci_helper_paths as $path)
 			{
 				if (file_exists($path.'helpers/'.$helper.'.php'))
@@ -547,6 +568,7 @@ class CI_Loader {
 			}
 
 			// unable to load the helper
+			// 查看是否成功加载了这个helper
 			if ( ! isset($this->_ci_helpers[$helper]))
 			{
 				show_error('Unable to load the requested file: helpers/'.$helper.'.php');
@@ -557,8 +579,8 @@ class CI_Loader {
 	// --------------------------------------------------------------------
 
 	/**
-	 * Load Helpers
-	 *
+	 * Load Helpers 
+	 * 仅仅是Helper方法的一个别名，以防开发者使用了复数形式
 	 * This is simply an alias to the above function in case the
 	 * user has written the plural form of this function.
 	 *
@@ -574,7 +596,7 @@ class CI_Loader {
 
 	/**
 	 * Loads a language file
-	 *
+	 * 调用超对象CI中的lang属性来加载相应的language文件
 	 * @param	array
 	 * @param	string
 	 * @return	void
@@ -598,7 +620,7 @@ class CI_Loader {
 
 	/**
 	 * Loads a config file
-	 *
+	 * 同上，调用超对象CI中的属性config加载相应的配置文件
 	 * @param	string
 	 * @param	bool
 	 * @param 	bool
@@ -1183,6 +1205,14 @@ class CI_Loader {
 	 * libraries, and helpers to be loaded automatically.
 	 * 
 	 * 这个方法是被CI_Controller调用的，自动加载配置文件中指定的类
+	 * 下游方法:
+	 * 	add_package_path
+	 * 	helper
+	 * 	language
+	 * 	library
+	 * 	model
+	 * 	database
+	 * 
 	 *
 	 * @param	array
 	 * @return	void
