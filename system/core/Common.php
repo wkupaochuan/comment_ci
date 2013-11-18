@@ -16,6 +16,9 @@
 // ------------------------------------------------------------------------
 
 /**
+ * 
+ * 一些常用方法，在user app中同样可以调用这些方法
+ * 
  * Common Functions
  *
  * Loads the base classes and executes the request.
@@ -30,6 +33,11 @@
 // ------------------------------------------------------------------------
 
 /**
+* 
+* 当前PHP版本是否大于$version
+* 1--$version信息存放在局部静态变量$is_php数组中,因为多个地方会用到这个变量
+* 2--
+* 
 * Determines if the current version of PHP is greater then the supplied value
 *
 * Since there are a few places where we conditionally test for PHP > 5
@@ -58,6 +66,8 @@ if ( ! function_exists('is_php'))
 // ------------------------------------------------------------------------
 
 /**
+ * 测试文件或者文件夹的可写权限
+ * 
  * Tests for file writability
  *
  * is_writable() returns TRUE on Windows servers when you really can't write to
@@ -106,6 +116,12 @@ if ( ! function_exists('is_really_writable'))
 // ------------------------------------------------------------------------
 
 /**
+* 实例化、注册对象
+* 1--单例模式,将已经实例化过的对象放在局部静态变量$_classes中
+* 2--CI的核心是可扩展,开发者可以根据system的类，通过+配置前缀命名的方式来继承父类，扩展自己的类出来，所以这里会搜索apppath和basepath 
+* 3--
+* 4--
+* 
 * Class registry
 *
 * This function acts as a singleton.  If the requested class does not
@@ -122,6 +138,7 @@ if ( ! function_exists('load_class'))
 {
 	function &load_class($class, $directory = 'libraries', $prefix = 'CI_')
 	{
+		// 局部静态变量，用来存放加载过的类名，单例模式体现在这
 		static $_classes = array();
 
 		// Does the class exist?  If so, we're done...
@@ -150,6 +167,7 @@ if ( ! function_exists('load_class'))
 		}
 
 		// Is the request a class extension?  If so we load it too
+		// 检查是否是开发者自己实现的子类(从配置文件中读取前缀)
 		if (file_exists(APPPATH.$directory.'/'.config_item('subclass_prefix').$class.'.php'))
 		{
 			$name = config_item('subclass_prefix').$class;
@@ -161,6 +179,7 @@ if ( ! function_exists('load_class'))
 		}
 
 		// Did we find the class?
+		// 是否找到了需要加载的类
 		if ($name === FALSE)
 		{
 			// Note: We use exit() rather then show_error() in order to avoid a
@@ -171,6 +190,7 @@ if ( ! function_exists('load_class'))
 		// Keep track of what we just loaded
 		is_loaded($class);
 
+		// 注册、实例化
 		$_classes[$class] = new $name();
 		return $_classes[$class];
 	}
@@ -179,6 +199,9 @@ if ( ! function_exists('load_class'))
 // --------------------------------------------------------------------
 
 /**
+* 
+* 追踪已经实例化过的对象
+* 1--记录存放在局部静态变量$_is_loaded中
 * Keeps track of which libraries have been loaded.  This function is
 * called by the load_class() function above
 *
@@ -203,6 +226,11 @@ if ( ! function_exists('is_loaded'))
 // ------------------------------------------------------------------------
 
 /**
+* 加载主配置文件config.php
+* 1--单例模式,配置项存放在局部静态变量$_config数组中
+* 2--可以指定运行时替换掉的配置
+* 3--有个问题是如果想要第二次加载并替换掉不同的配置项,则返回的是上次返回的老配置
+* 
 * Loads the main config.php file
 *
 * This function lets us grab the config file even if the Config class
@@ -215,6 +243,7 @@ if ( ! function_exists('get_config'))
 {
 	function &get_config($replace = array())
 	{
+		// 局部静态变量
 		static $_config;
 
 		if (isset($_config))
@@ -223,6 +252,7 @@ if ( ! function_exists('get_config'))
 		}
 
 		// Is the config file in the environment folder?
+		// 获取配置文件路径
 		if ( ! defined('ENVIRONMENT') OR ! file_exists($file_path = APPPATH.'config/'.ENVIRONMENT.'/config.php'))
 		{
 			$file_path = APPPATH.'config/config.php';
@@ -234,15 +264,20 @@ if ( ! function_exists('get_config'))
 			exit('The configuration file does not exist.');
 		}
 
+		// 这里为什么选择require而不是include,不是很清楚,也不清楚为什么没用_once
+		// 明白了,单例模式的问题.配置加载过后会放在$_config中,
+		// 但是,有个问题是,如果两次指定的replace不同,则无法处理
 		require($file_path);
 
 		// Does the $config array exist in the file?
+		// 所有配置都放在$config数组中
 		if ( ! isset($config) OR ! is_array($config))
 		{
 			exit('Your config file does not appear to be formatted correctly.');
 		}
 
 		// Are any values being dynamically replaced?
+		// 运行时替换掉指定项
 		if (count($replace) > 0)
 		{
 			foreach ($replace as $key => $val)
@@ -254,6 +289,7 @@ if ( ! function_exists('get_config'))
 			}
 		}
 
+		// 返回配置项
 		return $_config[0] =& $config;
 	}
 }
@@ -261,6 +297,9 @@ if ( ! function_exists('get_config'))
 // ------------------------------------------------------------------------
 
 /**
+* 获取config.php中的某个配置项
+* 1--单例模式
+* 2--
 * Returns the specified config item
 *
 * @access	public
@@ -290,6 +329,10 @@ if ( ! function_exists('config_item'))
 // ------------------------------------------------------------------------
 
 /**
+* 错误处理
+* 1--统一处理错误页面,处理完毕退出
+* 2--调用Exception类,使用apppath/errors/errors.php模板显示错误
+* 3--
 * Error Handler
 *
 * This function lets us invoke the exception class and
@@ -314,6 +357,7 @@ if ( ! function_exists('show_error'))
 // ------------------------------------------------------------------------
 
 /**
+* 404页面
 * 404 Page Handler
 *
 * This function is similar to the show_error() function above
@@ -336,6 +380,9 @@ if ( ! function_exists('show_404'))
 // ------------------------------------------------------------------------
 
 /**
+* 打印日志
+* 1--调用Log类处理
+* 2--
 * Error Logging Interface
 *
 * We use this as a simple mechanism to access the logging
@@ -355,6 +402,7 @@ if ( ! function_exists('log_message'))
 			return;
 		}
 
+		// 此处既然是静态变量, 可以使用isset方法,省去在下游方法中判断是否已经加载
 		$_log =& load_class('Log');
 		$_log->write_log($level, $message, $php_error);
 	}
@@ -363,6 +411,7 @@ if ( ! function_exists('log_message'))
 // ------------------------------------------------------------------------
 
 /**
+ * 设定header
  * Set HTTP Status Header
  *
  * @access	public
