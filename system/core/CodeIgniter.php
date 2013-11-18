@@ -306,6 +306,7 @@
 	$BM->mark('controller_execution_time_( '.$class.' / '.$method.' )_start');
 
 	$CI = new $class();
+	
 
 /*
  * ------------------------------------------------------

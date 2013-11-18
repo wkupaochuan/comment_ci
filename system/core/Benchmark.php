@@ -16,8 +16,15 @@
 // ------------------------------------------------------------------------
 
 /**
+ * 
+ * 标记时间类
+ * 1--成员变量marker标记某个时间点
+ * 2--从marker数组中去除两个时间计算差值
+ * 3--
  * CodeIgniter Benchmark Class
  *
+ * 
+ * 
  * This class enables you to mark points and calculate the time difference
  * between them.  Memory consumption can also be displayed.
  *
@@ -39,6 +46,9 @@ class CI_Benchmark {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 记录某个时间点
+	 * 1--将name作为key，记录到成员变量marker中
+	 * 
 	 * Set a benchmark marker
 	 *
 	 * Multiple calls to this function can be made so that several
@@ -56,7 +66,14 @@ class CI_Benchmark {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 计算两个时间点之间的时间差
+	 * 1--从成员变量marker按照key取出，并计算
+	 * 2--返回秒(保留小数位在第三个参数指定)
+	 * 3--如果要计算a方法或者函数的执行时间则分别标记xx_start和xx_end两个时间点，然后调用此方法取出时间差
+	 * 
+	 * 
 	 * Calculates the time difference between two marked points.
+	 * 
 	 *
 	 * If the first parameter is empty this function instead returns the
 	 * {elapsed_time} pseudo-variable. This permits the full system
