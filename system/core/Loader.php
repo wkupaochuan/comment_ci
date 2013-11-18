@@ -349,15 +349,16 @@ class CI_Loader {
 		$CI =& get_instance();
 
 		// Do we even need to load the database class?
-		//是否已经加载了DB类，并且不需要返回
+		// 单例模式，如果已经加载且不需要返回数据库对象，则返回false
 		if (class_exists('CI_DB') AND $return == FALSE AND $active_record == NULL AND isset($CI->db) AND is_object($CI->db))
 		{
 			return FALSE;
 		}
 
+		// 加载DB类
 		require_once(BASEPATH.'database/DB.php');
 
-		//需要返回则不指定超类ci->db，否则将建立的连接给ci->db
+		// 需要返回数据库类，则直接返回类；否则把实例化的数据库对象赋值给超对象CI->db
 		if ($return === TRUE)
 		{
 			return DB($params, $active_record);
