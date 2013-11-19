@@ -41,6 +41,7 @@ class CI_Exceptions {
 	var $ob_level;
 
 	/**
+	 * 可用的错误级别
 	 * List if available error levels
 	 *
 	 * @var array
@@ -63,6 +64,7 @@ class CI_Exceptions {
 
 
 	/**
+	 * 构造方法
 	 * Constructor
 	 */
 	public function __construct()
@@ -74,6 +76,9 @@ class CI_Exceptions {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 异常日志处理方法
+	 * 1--记录错误级别
+	 * 2--调用log_message公用方法记录日志(日志级别为error)
 	 * Exception Logger
 	 *
 	 * This function logs PHP generated error messages
@@ -87,14 +92,17 @@ class CI_Exceptions {
 	 */
 	function log_exception($severity, $message, $filepath, $line)
 	{
+		// 记录错误级别(开发者可以自己指定， 也可以使用默认的)
 		$severity = ( ! isset($this->levels[$severity])) ? $severity : $this->levels[$severity];
 
+		// 打印日志
 		log_message('error', 'Severity: '.$severity.'  --> '.$message. ' '.$filepath.' '.$line, TRUE);
 	}
 
 	// --------------------------------------------------------------------
 
 	/**
+	 * 处理404错误
 	 * 404 Page Not Found Handler
 	 *
 	 * @access	private
@@ -108,11 +116,13 @@ class CI_Exceptions {
 		$message = "The page you requested was not found.";
 
 		// By default we log this, but allow a dev to skip it
+		// 记录错误日志
 		if ($log_error)
 		{
 			log_message('error', '404 Page Not Found --> '.$page);
 		}
 
+		// 显示404页面并退出
 		echo $this->show_error($heading, $message, 'error_404', 404);
 		exit;
 	}
@@ -120,6 +130,7 @@ class CI_Exceptions {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 错误页面
 	 * General Error Page
 	 *
 	 * This function takes an error message as input
@@ -135,8 +146,11 @@ class CI_Exceptions {
 	 */
 	function show_error($heading, $message, $template = 'error_general', $status_code = 500)
 	{
+		
+		// 设定header
 		set_status_header($status_code);
 
+		// 错误提示(用html标签包过错误信息$message)
 		$message = '<p>'.implode('</p><p>', ( ! is_array($message)) ? array($message) : $message).'</p>';
 
 		if (ob_get_level() > $this->ob_level + 1)
@@ -144,6 +158,7 @@ class CI_Exceptions {
 			ob_end_flush();
 		}
 		ob_start();
+		// 包含apppath/errors目录下的错误页面
 		include(APPPATH.'errors/'.$template.'.php');
 		$buffer = ob_get_contents();
 		ob_end_clean();
@@ -153,6 +168,7 @@ class CI_Exceptions {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 显示php错误
 	 * Native PHP error handler
 	 *
 	 * @access	private
