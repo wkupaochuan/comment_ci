@@ -500,6 +500,8 @@ if ( ! function_exists('set_status_header'))
 // --------------------------------------------------------------------
 
 /**
+* 异常处理方法
+* 
 * Exception Handler
 *
 * This is the custom exception handler that is declaired at the top

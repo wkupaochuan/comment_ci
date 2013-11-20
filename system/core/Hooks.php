@@ -16,6 +16,10 @@
 // ------------------------------------------------------------------------
 
 /**
+ * 钩子
+ * 1--没理解钩子的意义
+ * 2--
+ * 3--
  * CodeIgniter Hooks Class
  *
  * Provides a mechanism to extend the base system without hacking.
@@ -29,6 +33,7 @@
 class CI_Hooks {
 
 	/**
+	 * 是否启用钩子
 	 * Determines wether hooks are enabled
 	 *
 	 * @var bool
@@ -48,6 +53,9 @@ class CI_Hooks {
 	var $in_progress	= FALSE;
 
 	/**
+	 * 构造方法
+	 * 1--构造方法的内容放在了_initialize方法内
+	 * 2--为什么很多其他类不仿照这种方法封装呢?
 	 * Constructor
 	 *
 	 */
@@ -60,6 +68,11 @@ class CI_Hooks {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 初始化
+	 * 1--初始化钩子的各项特性
+	 * 2--钩子定义在hooks.php配置文件中
+	 * 3--config.php中定义了是否启用钩子
+	 * 4--
 	 * Initialize the Hooks Preferences
 	 *
 	 * @access	private
@@ -67,11 +80,13 @@ class CI_Hooks {
 	 */
 	function _initialize()
 	{
+		// 获取config.php配置文件
 		$CFG =& load_class('Config', 'core');
 
 		// If hooks are not enabled in the config file
 		// there is nothing else to do
 
+		// 校验是否启用了钩子
 		if ($CFG->item('enable_hooks') == FALSE)
 		{
 			return;
@@ -80,6 +95,7 @@ class CI_Hooks {
 		// Grab the "hooks" definition file.
 		// If there are no hooks, we're done.
 
+		// 获取钩子定义，将配置文件包含进来
 		if (defined('ENVIRONMENT') AND is_file(APPPATH.'config/'.ENVIRONMENT.'/hooks.php'))
 		{
 		    include(APPPATH.'config/'.ENVIRONMENT.'/hooks.php');
@@ -90,11 +106,13 @@ class CI_Hooks {
 		}
 
 
+		// $hook变量为配置文件指定，必须是数组
 		if ( ! isset($hook) OR ! is_array($hook))
 		{
 			return;
 		}
 
+		// 获取钩子定义
 		$this->hooks =& $hook;
 		$this->enabled = TRUE;
 	}
@@ -102,6 +120,7 @@ class CI_Hooks {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 调用特定的钩子
 	 * Call Hook
 	 *
 	 * Calls a particular hook
@@ -112,11 +131,14 @@ class CI_Hooks {
 	 */
 	function _call_hook($which = '')
 	{
+		// 校验是否启用了钩子且在hook.php中配置了相应的hook
 		if ( ! $this->enabled OR ! isset($this->hooks[$which]))
 		{
 			return FALSE;
 		}
 
+		
+		// 启动hook
 		if (isset($this->hooks[$which][0]) AND is_array($this->hooks[$which][0]))
 		{
 			foreach ($this->hooks[$which] as $val)
@@ -135,6 +157,7 @@ class CI_Hooks {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 启动一个钩子
 	 * Run Hook
 	 *
 	 * Runs a particular hook
@@ -157,6 +180,7 @@ class CI_Hooks {
 		// If the script being called happens to have the same
 		// hook call within it a loop can happen
 
+		// 钩子之间不可并行(调用钩子的地方都是单例模式,保证了in_progress的有效性)
 		if ($this->in_progress == TRUE)
 		{
 			return;
@@ -166,11 +190,13 @@ class CI_Hooks {
 		// Set file path
 		// -----------------------------------
 
+		// 指定钩子的路径和文件名
 		if ( ! isset($data['filepath']) OR ! isset($data['filename']))
 		{
 			return FALSE;
 		}
 
+		
 		$filepath = APPPATH.$data['filepath'].'/'.$data['filename'];
 
 		if ( ! file_exists($filepath))
@@ -186,21 +212,25 @@ class CI_Hooks {
 		$function	= FALSE;
 		$params		= '';
 
+		// 类名
 		if (isset($data['class']) AND $data['class'] != '')
 		{
 			$class = $data['class'];
 		}
 
+		// 方法名
 		if (isset($data['function']))
 		{
 			$function = $data['function'];
 		}
 
+		// 参数
 		if (isset($data['params']))
 		{
 			$params = $data['params'];
 		}
 
+		// 类名和方法名必须指定
 		if ($class === FALSE AND $function === FALSE)
 		{
 			return FALSE;
@@ -210,12 +240,15 @@ class CI_Hooks {
 		// Set the in_progress flag
 		// -----------------------------------
 
+		// 标记钩子启动
 		$this->in_progress = TRUE;
 
 		// -----------------------------------
 		// Call the requested class and/or function
 		// -----------------------------------
 
+		// 调用被请求的钩子的方法
+		// 钩子文件可以是类也可以是纯方法
 		if ($class !== FALSE)
 		{
 			if ( ! class_exists($class))
