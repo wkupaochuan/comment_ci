@@ -551,6 +551,10 @@ if ( ! function_exists('_exception_handler'))
 // --------------------------------------------------------------------
 
 /**
+ * 替换掉所有的非法字符
+ * 1--非法字符在函数中指定
+ * 2--do while结构运用很巧妙
+ * 
  * Remove Invisible Characters
  *
  * This prevents sandwiching null characters
@@ -577,6 +581,7 @@ if ( ! function_exists('remove_invisible_characters'))
 		
 		$non_displayables[] = '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/S';	// 00-08, 11, 12, 14-31, 127
 
+		// 将非法字符替换为空，直到替换完为止.第四个参数是每个parttern在subject上进行的次数,-1为无限;$count将被此次替换的次数填充,替换完毕则退出
 		do
 		{
 			$str = preg_replace($non_displayables, '', $str, -1, $count);

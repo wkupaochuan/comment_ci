@@ -19,7 +19,18 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
-		$this->load->view('welcome_message');
+		echo 'asd';
+		//$this->load->view('welcome_message');
+	}
+	
+	public function bubble_sort()
+	{
+		$array = array();
+		for($i = 0; $i < 100000; ++$i)
+		{
+			$array[] = rand(1, 1000000);
+		}
+		var_dump(array_slice($array, 2, 5)) ;
 	}
 }
 

@@ -129,9 +129,11 @@ $config['subclass_prefix'] = 'MY_';
 $config['permitted_uri_chars'] = 'a-z 0-9~%.:_\-';
 
 
+
 /*
 |--------------------------------------------------------------------------
 | Enable Query Strings
+| 启用查询字符串
 |--------------------------------------------------------------------------
 |
 | By default CodeIgniter uses search-engine friendly segment based URLs:
@@ -283,6 +285,7 @@ $config['global_xss_filtering'] = FALSE;
 
 /*
 |--------------------------------------------------------------------------
+| 启用跨站点请求保护
 | Cross Site Request Forgery
 |--------------------------------------------------------------------------
 | Enables a CSRF cookie token to be set. When set to TRUE, token will be

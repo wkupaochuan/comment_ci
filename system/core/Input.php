@@ -16,6 +16,7 @@
 // ------------------------------------------------------------------------
 
 /**
+ * 输入类
  * Input Class
  *
  * Pre-processes global input data for security
@@ -74,6 +75,7 @@ class CI_Input {
 	protected $headers			= array();
 
 	/**
+	 * 构造方法
 	 * Constructor
 	 *
 	 * Sets whether to globally enable the XSS processing
@@ -85,14 +87,19 @@ class CI_Input {
 	{
 		log_message('debug', "Input Class Initialized");
 
+		// 允许get数组
 		$this->_allow_get_array	= (config_item('allow_get_array') === TRUE);
+		// 启用xss过滤
 		$this->_enable_xss		= (config_item('global_xss_filtering') === TRUE);
+		// 启用跨站点请求保护cross site request forgery
 		$this->_enable_csrf		= (config_item('csrf_protection') === TRUE);
 
+		// 全局变量
 		global $SEC;
 		$this->security =& $SEC;
 
 		// Do we need the UTF-8 class?
+		// 如果启用了UTF编码,则获取$UNI变量(这个变量位于Codeigniter中,input类的实例化也在Codeigniter中)
 		if (UTF8_ENABLED === TRUE)
 		{
 			global $UNI;
@@ -100,6 +107,7 @@ class CI_Input {
 		}
 
 		// Sanitize global arrays
+		// 清理global变量
 		$this->_sanitize_globals();
 	}
 
@@ -108,6 +116,10 @@ class CI_Input {
 	/**
 	 * Fetch from array
 	 *
+	 * 从全局变量中获取内容
+	 * 1--$index是$array中的key
+	 * 2--直接xssclean字符串不就可以吗？为什么还要把数组传递过来.唯一看到的好处就是如果index不存在与数组中可以返回false,统一了返回结果
+	 * 3--
 	 * This is a helper function to retrieve values from global arrays
 	 *
 	 * @access	private
@@ -123,6 +135,7 @@ class CI_Input {
 			return FALSE;
 		}
 
+		// 做xss过滤
 		if ($xss_clean === TRUE)
 		{
 			return $this->security->xss_clean($array[$index]);
@@ -289,6 +302,10 @@ class CI_Input {
 	// --------------------------------------------------------------------
 
 	/**
+	* 从$_SERVER超全局变量中获取某个变量
+	* 1--这里会根据需要做xss过滤,所以没有直接从$_SERVER中取值
+	* 2--
+	* 3--
 	* Fetch an item from the SERVER array
 	*
 	* @access	public
@@ -548,6 +565,7 @@ class CI_Input {
 	// --------------------------------------------------------------------
 
 	/**
+	* 清理全局变量
 	* Sanitize Globals
 	*
 	* This function does the following:
@@ -571,6 +589,8 @@ class CI_Input {
 
 		// Unset globals for securiy.
 		// This is effectively the same as register_globals = off
+		// 除上面的变量之外$_GET, $_POST, $_COOKIE中不允许设置global变量
+		// 这点在codeigniter论坛里有人提到过:在试图向$_GET中塞入某个变量，并设置为global时,失败
 		foreach (array($_GET, $_POST, $_COOKIE) as $global)
 		{
 			if ( ! is_array($global))
@@ -595,6 +615,7 @@ class CI_Input {
 		}
 
 		// Is $_GET data allowed? If not we'll set the $_GET to an empty array
+		//
 		if ($this->_allow_get_array == FALSE)
 		{
 			$_GET = array();
@@ -653,6 +674,10 @@ class CI_Input {
 	// --------------------------------------------------------------------
 
 	/**
+	* 清理输入数据(不同于清理key)
+	* 1--
+	* 2--
+	* 3--
 	* Clean Input Data
 	*
 	* This is a helper function. It escapes data and
@@ -660,10 +685,11 @@ class CI_Input {
 	*
 	* @access	private
 	* @param	string
-	* @return	string
+	* @return	string 清理完毕的字符串或者数组
 	*/
 	function _clean_input_data($str)
 	{
+		// 循环清理数组(清理key和value)
 		if (is_array($str))
 		{
 			$new_array = array();
@@ -685,21 +711,25 @@ class CI_Input {
 		}
 
 		// Clean UTF-8 if supported
+		// utf-8清理
 		if (UTF8_ENABLED === TRUE)
 		{
 			$str = $this->uni->clean_string($str);
 		}
 
 		// Remove control characters
+		// 去除非法字符
 		$str = remove_invisible_characters($str);
 
 		// Should we filter the input data?
+		// xss过滤
 		if ($this->_enable_xss === TRUE)
 		{
 			$str = $this->security->xss_clean($str);
 		}
 
 		// Standardize newlines if needed
+		// 全部回车换行替换为\n
 		if ($this->_standardize_newlines == TRUE)
 		{
 			if (strpos($str, "\r") !== FALSE)
@@ -714,10 +744,13 @@ class CI_Input {
 	// --------------------------------------------------------------------
 
 	/**
+	* 清理字符串，防止用户恶意输入
+	* 1--这里的正则表达式有问题,附链接http://www.nowamagic.net/librarys/veda/detail/1699
+	* 2--这里为什么没有做xss过滤?
 	* Clean Keys
 	*
 	* This is a helper function. To prevent malicious users
-	* from trying to exploit keys we make sure that keys are
+	* from trying to exploit keys(利用关键字) we make sure that keys are
 	* only named with alpha-numeric text and a few other items.
 	*
 	* @access	private
@@ -726,23 +759,27 @@ class CI_Input {
 	*/
 	function _clean_input_keys($str)
 	{
+		// 搜索到非法字符，直接退出(正则表达式匹配有问题)
 		if ( ! preg_match("/^[a-z0-9:_\/-]+$/i", $str))
 		{
 			exit('Disallowed Key Characters.');
 		}
 
 		// Clean UTF-8 if supported
+		// 调用UTF-8的清理功能
 		if (UTF8_ENABLED === TRUE)
 		{
 			$str = $this->uni->clean_string($str);
 		}
 
+		// 返回清理后的字符串
 		return $str;
 	}
 
 	// --------------------------------------------------------------------
 
 	/**
+	 * 获取请求头
 	 * Request Headers
 	 *
 	 * In Apache, you can simply call apache_request_headers(), however for
@@ -755,11 +792,13 @@ class CI_Input {
 	public function request_headers($xss_clean = FALSE)
 	{
 		// Look at Apache go!
+		// apache_request_headers不兼容所有服务器
 		if (function_exists('apache_request_headers'))
 		{
 			$headers = apache_request_headers();
 		}
 		else
+		// 把 $_SERVER中的HTTP_开头的内容填充到$header
 		{
 			$headers['Content-Type'] = (isset($_SERVER['CONTENT_TYPE'])) ? $_SERVER['CONTENT_TYPE'] : @getenv('CONTENT_TYPE');
 
@@ -773,6 +812,7 @@ class CI_Input {
 		}
 
 		// take SOME_HEADER and turn it into Some-Header
+		// 将header数组中的SOME_HEADER形式的key，转化为Some_Header形式的key
 		foreach ($headers as $key => $val)
 		{
 			$key = str_replace('_', ' ', strtolower($key));
@@ -787,6 +827,11 @@ class CI_Input {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 获取请求头
+	 * 1--从请求头中获取某一项的值
+	 * 2--
+	 * 3--
+	 * 
 	 * Get Request Header
 	 *
 	 * Returns the value of a single member of the headers class member
@@ -818,6 +863,10 @@ class CI_Input {
 	// --------------------------------------------------------------------
 
 	/**
+	 * 判断是否是AJAX请求
+	 * 1--比较有用的方法
+	 * 2--
+	 * 3--
 	 * Is ajax Request?
 	 *
 	 * Test to see if a request contains the HTTP_X_REQUESTED_WITH header
@@ -827,11 +876,15 @@ class CI_Input {
 	public function is_ajax_request()
 	{
 		return ($this->server('HTTP_X_REQUESTED_WITH') === 'XMLHttpRequest');
+		// return ($_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest');
 	}
 
 	// --------------------------------------------------------------------
 
 	/**
+	 * 判定是否是CLI请求
+	 * 1--这个方法十分有用，可以留作将来用
+	 * 2--另外这里的php_sapi_name()获取的cli,应该就是php架构中的sapi(server application programming iterface)
 	 * Is cli Request?
 	 *
 	 * Test to see if a request was made from the command line
