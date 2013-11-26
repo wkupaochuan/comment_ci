@@ -10,7 +10,7 @@ class Algrithm extends CI_Controller{
 		parent::__construct();
 		
 		// initial array to be sorted
-		for($i = 0; $i < 10000; ++$i)
+		for($i = 0; $i < 100000; ++$i)
 		{
 			array_push($this->array, rand(1, 1000000));
 		}

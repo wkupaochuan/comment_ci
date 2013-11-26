@@ -24,7 +24,7 @@ class quick_sort extends CI_Model{
 		
 		// sort body
 		$start_time = microtime(true);
-		$this->quick_sort(&$array, 0, count($array) - 1, $compare_count, $exchange_count);
+		$this->quick_sort($array, 0, count($array) - 1, $compare_count, $exchange_count);
 		$end_time = microtime(true);
 		
 		
@@ -83,7 +83,7 @@ class quick_sort extends CI_Model{
 	
 		// sort body
 		$start_time = microtime(true);
-		$this->quick_sort_1(&$array, 0, count($array) - 1, $compare_count, $exchange_count);
+		$this->quick_sort_1($array, 0, count($array) - 1, $compare_count, $exchange_count);
 		$end_time = microtime(true);
 	
 	
@@ -143,7 +143,7 @@ class quick_sort extends CI_Model{
 	
 		// sort body
 		$start_time = microtime(true);
-		$this->quick_sort_1(&$array, 0, count($array) - 1, $compare_count, $exchange_count);
+		$this->quick_sort_1($array, 0, count($array) - 1, $compare_count, $exchange_count);
 		$end_time = microtime(true);
 	
 	
@@ -201,9 +201,6 @@ class quick_sort extends CI_Model{
 		ksort($array);
 		return key(next($array));
 	}
-	
-	
-	
 	
 	
 	
