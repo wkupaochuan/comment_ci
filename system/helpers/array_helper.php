@@ -28,7 +28,9 @@
 // ------------------------------------------------------------------------
 
 /**
+ * 在数组中获取某个key对应的value,如果不存在这个key或者value为''，则返回false或者你指定的内容
  * Element
+ * 
  *
  * Lets you determine whether an array index is set and whether it has a value.
  * If the element is empty it returns FALSE (or whatever you specify as the default value.)
@@ -55,6 +57,7 @@ if ( ! function_exists('element'))
 // ------------------------------------------------------------------------
 
 /**
+ * 随机获取数组中的某个元素
  * Random Element - Takes an array as input and returns a random element
  *
  * @access	public
@@ -69,7 +72,7 @@ if ( ! function_exists('random_element'))
 		{
 			return $array;
 		}
-
+		//array_rand返回的是key
 		return $array[array_rand($array)];
 	}
 }
@@ -77,6 +80,7 @@ if ( ! function_exists('random_element'))
 // --------------------------------------------------------------------
 
 /**
+ * 同第一个函数，返回数组中的若干key对应的value，如果key不存在返回指定的value
  * Elements
  *
  * Returns only the array items specified.  Will return a default value if

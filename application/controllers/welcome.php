@@ -19,8 +19,13 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
-		echo 'asd';
-		//$this->load->view('welcome_message');
+		$a = array(
+				'a'=>'dd',
+				'b'=>'bb',
+				'c'=>'cc'
+				);
+		$b = array_rand($a);
+		var_dump($b);
 	}
 	
 	public function bubble_sort()
