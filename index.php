@@ -2,7 +2,7 @@
 
 /*
  *---------------------------------------------------------------
- * APPLICATION ENVIRONMENT
+ * APPLICATION ENVIRONMENT 应用环境
  *---------------------------------------------------------------
  *
  * You can load different configurations depending on your
@@ -21,11 +21,11 @@
 	define('ENVIRONMENT', 'development');
 /*
  *---------------------------------------------------------------
- * ERROR REPORTING
+ * ERROR REPORTING	错误报告
  *---------------------------------------------------------------
  *
  * Different environments will require different levels of error reporting.
- * By default development will show errors but testing and live will hide them.
+ * By default development will show errors but testing and live will hide them.(这里也显示了测试和正式环境的一致性)
  */
 
 if (defined('ENVIRONMENT'))
@@ -48,7 +48,7 @@ if (defined('ENVIRONMENT'))
 
 /*
  *---------------------------------------------------------------
- * SYSTEM FOLDER NAME
+ * SYSTEM FOLDER NAME	框架文件夹名字
  *---------------------------------------------------------------
  *
  * This variable must contain the name of your "system" folder.
@@ -60,7 +60,7 @@ if (defined('ENVIRONMENT'))
 
 /*
  *---------------------------------------------------------------
- * APPLICATION FOLDER NAME
+ * APPLICATION FOLDER NAME 应用程序文件夹名称
  *---------------------------------------------------------------
  *
  * If you want this front controller to use a different "application"
@@ -76,7 +76,7 @@ if (defined('ENVIRONMENT'))
 
 /*
  * --------------------------------------------------------------------
- * DEFAULT CONTROLLER
+ * DEFAULT CONTROLLER	默认控制器
  * --------------------------------------------------------------------
  *
  * Normally you will set your default controller in the routes.php file.
@@ -135,17 +135,22 @@ if (defined('ENVIRONMENT'))
  */
 
 	// Set the current directory correctly for CLI requests
+	// 如果是CLI请求，可能在任何路径发生，所以这里将当前文件夹名称切换到当前脚本所在文件夹(即index.php所在文件夹)
 	if (defined('STDIN'))
 	{
 		chdir(dirname(__FILE__));
 	}
 
+	// 得到框架文件夹的绝对路径,
+	// $system_path有可能是 ../../../system等相对路径
+	// 上面的文件夹切换保证了相对路径的有效
 	if (realpath($system_path) !== FALSE)
 	{
 		$system_path = realpath($system_path).'/';
 	}
 
 	// ensure there's a trailing slash
+	// 保证框架路径以/结尾, 规范化的路径
 	$system_path = rtrim($system_path, '/').'/';
 
 	// Is the system path correct?
@@ -157,6 +162,7 @@ if (defined('ENVIRONMENT'))
 /*
  * -------------------------------------------------------------------
  *  Now that we know the path, set the main path constants
+ *  获取了正确的框架绝对路径，就可以加载框架文件了
  * -------------------------------------------------------------------
  */
 	// The name of THIS file
@@ -170,13 +176,15 @@ if (defined('ENVIRONMENT'))
 	define('BASEPATH', str_replace("\\", "/", $system_path));
 
 	// Path to the front controller (this file)
+	// 这里默认将index.php作为了最原始的前端控制器
 	define('FCPATH', str_replace(SELF, '', __FILE__));
 
 	// Name of the "system folder"
+	// 获取框架文件的名称，前后都不带/
 	define('SYSDIR', trim(strrchr(trim(BASEPATH, '/'), '/'), '/'));
 
-
 	// The path to the "application" folder
+	// 这里的APPPATH应该说仅仅是配置中指定的路径
 	if (is_dir($application_folder))
 	{
 		define('APPPATH', $application_folder.'/');
