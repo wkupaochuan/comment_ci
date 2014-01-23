@@ -267,6 +267,9 @@ if ( ! function_exists('get_config'))
 		// 这里为什么选择require而不是include,不是很清楚,也不清楚为什么没用_once
 		// 明白了,单例模式的问题.配置加载过后会放在$_config中,
 		// 但是,有个问题是,如果两次指定的replace不同,则无法处理
+		
+		// 14-01-23, 现在可以解答问题了,显然上面用的static静态变量，采用的单例模式；
+		// 就代表这个方法中加载配置文件只会执行一次，其他时间都是从静态变量中获取
 		require($file_path);
 
 		// Does the $config array exist in the file?
@@ -278,6 +281,7 @@ if ( ! function_exists('get_config'))
 
 		// Are any values being dynamically replaced?
 		// 运行时替换掉指定项
+		// 14-01-23：这里存在问题--第二次请求get_config不会执行下面的代码，那么replace也就失效了
 		if (count($replace) > 0)
 		{
 			foreach ($replace as $key => $val)

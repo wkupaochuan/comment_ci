@@ -19,6 +19,9 @@
  * System Initialization File
  *
  * Loads the base classes and executes the request.
+ * 
+ * 装载框架的文件
+ * 在这个文件中会加载基础类并执行请求
  *
  * @package		CodeIgniter
  * @subpackage	codeigniter
@@ -29,7 +32,7 @@
 
 /**
  * CodeIgniter Version
- *
+ * 框架版本
  * @var string
  *
  */
@@ -37,7 +40,7 @@
 
 /**
  * CodeIgniter Branch (Core = TRUE, Reactor = FALSE)
- *
+ * 暂时不知道用来做什么
  * @var boolean
  *
  */
@@ -46,6 +49,7 @@
 /*
  * ------------------------------------------------------
  *  Load the global functions
+ *  加载全局方法
  * ------------------------------------------------------
  */
 	require(BASEPATH.'core/Common.php');
@@ -53,6 +57,9 @@
 /*
  * ------------------------------------------------------
  *  Load the framework constants
+ *  加载全局常量
+ *  主要包括文件夹权限和文件读写权限
+ *  ps: 这里考虑到了是否需要不同环境下(development,test,production)各配置一套常量
  * ------------------------------------------------------
  */
 	if (defined('ENVIRONMENT') AND file_exists(APPPATH.'config/'.ENVIRONMENT.'/constants.php'))
@@ -67,6 +74,8 @@
 /*
  * ------------------------------------------------------
  *  Define a custom error handler so we can log PHP errors
+ *  指定common.php中的_exception_handler方法为异常处理函数，
+ *  这样我们就可以灵活的记录日志、处理异常了
  * ------------------------------------------------------
  */
 	set_error_handler('_exception_handler');
@@ -100,6 +109,8 @@
 /*
  * ------------------------------------------------------
  *  Set a liberal script execution time limit
+ *  设置一个宽泛的一次脚本执行时间5分钟
+ *  当然是在sage_mode未开启的情况下
  * ------------------------------------------------------
  */
 	if (function_exists("set_time_limit") == TRUE AND @ini_get("safe_mode") == 0)
@@ -110,15 +121,19 @@
 /*
  * ------------------------------------------------------
  *  Start the timer... tick tock tick tock...
+ *  计时器
  * ------------------------------------------------------
  */
 	$BM =& load_class('Benchmark', 'core');
+	// 记录脚本总执行时间开始时间
 	$BM->mark('total_execution_time_start');
+	// 记录基础类加载开始时间
 	$BM->mark('loading_time:_base_classes_start');
 
 /*
  * ------------------------------------------------------
  *  Instantiate the hooks class
+ *  钩子类
  * ------------------------------------------------------
  */
 	$EXT =& load_class('Hooks', 'core');
@@ -128,11 +143,13 @@
  *  Is there a "pre_system" hook?
  * ------------------------------------------------------
  */
+	// 调用系统开始前的钩子
 	$EXT->_call_hook('pre_system');
 
 /*
  * ------------------------------------------------------
  *  Instantiate the config class
+ *  // 实例化配置类
  * ------------------------------------------------------
  */
 	$CFG =& load_class('Config', 'core');
@@ -146,12 +163,14 @@
 /*
  * ------------------------------------------------------
  *  Instantiate the UTF-8 class
+ *  实例化UTF-8类
  * ------------------------------------------------------
  *
  * Note: Order here is rather important as the UTF-8
  * class needs to be used very early on, but it cannot
  * properly determine if UTf-8 can be supported until
  * after the Config class is instantiated.
+ * 按常理字符集类应该尽早加载，但是值是否支持UTF-8是在config中配置的，所以必须在config之后
  *
  */
 
@@ -160,6 +179,7 @@
 /*
  * ------------------------------------------------------
  *  Instantiate the URI class
+ *  实例化URI类
  * ------------------------------------------------------
  */
 	$URI =& load_class('URI', 'core');
@@ -167,6 +187,7 @@
 /*
  * ------------------------------------------------------
  *  Instantiate the routing class and set the routing
+ *  实例化路由类，并路由请求
  * ------------------------------------------------------
  */
 	$RTR =& load_class('Router', 'core');
@@ -181,6 +202,7 @@
 /*
  * ------------------------------------------------------
  *  Instantiate the output class
+ *  实例化输出类
  * ------------------------------------------------------
  */
 	$OUT =& load_class('Output', 'core');
@@ -188,6 +210,7 @@
 /*
  * ------------------------------------------------------
  *	Is there a valid cache file?  If so, we're done...
+ *  显示可用缓存，并退出
  * ------------------------------------------------------
  */
 	if ($EXT->_call_hook('cache_override') === FALSE)
@@ -201,6 +224,7 @@
 /*
  * -----------------------------------------------------
  * Load the security class for xss and csrf support
+ * 加载安全过滤类
  * -----------------------------------------------------
  */
 	$SEC =& load_class('Security', 'core');
@@ -208,6 +232,7 @@
 /*
  * ------------------------------------------------------
  *  Load the Input class and sanitize globals
+ *  加载输入类，并清理全局常量(bug所在处)
  * ------------------------------------------------------
  */
 	$IN	=& load_class('Input', 'core');
@@ -215,6 +240,7 @@
 /*
  * ------------------------------------------------------
  *  Load the Language class
+ *  加载语言类
  * ------------------------------------------------------
  */
 	$LANG =& load_class('Lang', 'core');
@@ -222,6 +248,7 @@
 /*
  * ------------------------------------------------------
  *  Load the app controller and local controller
+ *  加载Controller.php文件
  * ------------------------------------------------------
  *
  */
@@ -234,6 +261,7 @@
 	}
 
 
+	// 加载扩展的Controller.php文件
 	if (file_exists(APPPATH.'core/'.$CFG->config['subclass_prefix'].'Controller.php'))
 	{
 		require APPPATH.'core/'.$CFG->config['subclass_prefix'].'Controller.php';
@@ -247,23 +275,30 @@
 		show_error('Unable to load your default controller. Please make sure the controller specified in your Routes.php file is valid.');
 	}
 
+	// 加载此次请求的controller
 	include(APPPATH.'controllers/'.$RTR->fetch_directory().$RTR->fetch_class().'.php');
 
 	// Set a mark point for benchmarking
+	// 基础类加载时间结束
 	$BM->mark('loading_time:_base_classes_end');
 
 /*
  * ------------------------------------------------------
  *  Security check
+ *  安全检查
  * ------------------------------------------------------
  *
  *  None of the functions in the app controller or the
  *  loader class can be called via the URI, nor can
  *  controller functions that begin with an underscore
+ *  下划线开头的方法无法通过URI访问,都是私有方法
  */
+	// 获取控制器类和方法
 	$class  = $RTR->fetch_class();
 	$method = $RTR->fetch_method();
 
+	// 类不存在或者请求了私有方法或者请求的方法在CI_Controller中存在
+	// 显示404页面
 	if ( ! class_exists($class)
 		OR strncmp($method, '_', 1) == 0
 		OR in_array(strtolower($method), array_map('strtolower', get_class_methods('CI_Controller')))
@@ -293,6 +328,7 @@
 /*
  * ------------------------------------------------------
  *  Is there a "pre_controller" hook?
+ *  启用控制器之前的钩子
  * ------------------------------------------------------
  */
 	$EXT->_call_hook('pre_controller');
@@ -300,6 +336,7 @@
 /*
  * ------------------------------------------------------
  *  Instantiate the requested controller
+ *  实例化被请求的控制器类并开始计时
  * ------------------------------------------------------
  */
 	// Mark a start point so we can benchmark the controller
@@ -311,6 +348,7 @@
 /*
  * ------------------------------------------------------
  *  Is there a "post_controller_constructor" hook?
+ *  执行控制器实例化后执行的钩子
  * ------------------------------------------------------
  */
 	$EXT->_call_hook('post_controller_constructor');
@@ -321,6 +359,7 @@
  * ------------------------------------------------------
  */
 	// Is there a "remap" function? If so, we call it instead
+	// 是否存在重定向
 	if (method_exists($CI, '_remap'))
 	{
 		$CI->_remap($method, array_slice($URI->rsegments, 2));
