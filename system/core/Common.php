@@ -18,9 +18,8 @@
 /**
  * 
  * 一些常用方法，在user app中同样可以调用这些方法
- * 
- * Common Functions
  *
+ * Common Functions
  * Loads the base classes and executes the request.
  *
  * @package		CodeIgniter
@@ -34,9 +33,9 @@
 
 /**
 * 
-* 当前PHP版本是否大于$version
+* 当前PHP版本是否大于等于$version
 * 1--$version信息存放在局部静态变量$is_php数组中,因为多个地方会用到这个变量
-* 2--
+* 2--主要用于兼容性上，很多地方只有php版本高于某个版本时，特性可用
 * 
 * Determines if the current version of PHP is greater then the supplied value
 *
@@ -51,11 +50,13 @@ if ( ! function_exists('is_php'))
 {
 	function is_php($version = '5.0.0')
 	{
+        // 局部静态变量
 		static $_is_php;
 		$version = (string)$version;
 
 		if ( ! isset($_is_php[$version]))
 		{
+            // 当前php版本小于$version，则为false，其余为真
 			$_is_php[$version] = (version_compare(PHP_VERSION, $version) < 0) ? FALSE : TRUE;
 		}
 
@@ -121,27 +122,30 @@ if ( ! function_exists('is_really_writable'))
 * 2--CI的核心是可扩展,开发者可以根据system的类，通过+配置前缀命名的方式来继承父类，扩展自己的类出来，所以这里会搜索apppath和basepath 
 * 3--
 * 4--
-* 
 * Class registry
 *
 * This function acts as a singleton.  If the requested class does not
 * exist it is instantiated and set to a static variable.  If it has
 * previously been instantiated the variable is returned.
 *
-* @access	public
-* @param	string	the class name being requested
-* @param	string	the directory where the class should be found
-* @param	string	the class name prefix
-* @return	object
+* @access	public                                                      公有访问属性
+* @param	string	the class name being requested                      类名称
+* @param	string	the directory where the class should be found       类的根目录
+* @param	string	the class name prefix                               类名前缀
+* @return	object                                                      类实例
 */
 if ( ! function_exists('load_class'))
 {
 	function &load_class($class, $directory = 'libraries', $prefix = 'CI_')
 	{
-		// 局部静态变量，用来存放加载过的类名，单例模式体现在这
-		static $_classes = array();
+        /**
+         * 局部静态变量，用来存放加载过的类名，单例模式体现在这
+         *
+         */
+        static $_classes = array();
 
 		// Does the class exist?  If so, we're done...
+        // 加载过的类，直接返回
 		if (isset($_classes[$class]))
 		{
 			return $_classes[$class];
@@ -188,6 +192,7 @@ if ( ! function_exists('load_class'))
 		}
 
 		// Keep track of what we just loaded
+        // 记录下已经实例化过的类
 		is_loaded($class);
 
 		// 注册、实例化
@@ -196,7 +201,9 @@ if ( ! function_exists('load_class'))
 	}
 }
 
+
 // --------------------------------------------------------------------
+
 
 /**
 * 
@@ -252,7 +259,7 @@ if ( ! function_exists('get_config'))
 		}
 
 		// Is the config file in the environment folder?
-		// 获取配置文件路径
+		// 获取配置文件路径(优先加载environment下的配置文件)
 		if ( ! defined('ENVIRONMENT') OR ! file_exists($file_path = APPPATH.'config/'.ENVIRONMENT.'/config.php'))
 		{
 			$file_path = APPPATH.'config/config.php';
@@ -619,6 +626,9 @@ if ( ! function_exists('html_escape'))
 		}
 	}
 }
+
+
+
 
 /* End of file Common.php */
 /* Location: ./system/core/Common.php */

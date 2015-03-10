@@ -16,6 +16,8 @@
 // ------------------------------------------------------------------------
 
 /**
+ * 配置类
+ *
  * CodeIgniter Config Class
  *
  * This class contains functions that enable config files to be managed
@@ -48,6 +50,7 @@ class CI_Config {
 	var $_config_paths = array(APPPATH);
 
 	/**
+     * 构造方法
 	 * Constructor
 	 *
 	 * Sets the $config data from the primary config.php file as a class variable
@@ -60,10 +63,12 @@ class CI_Config {
 	 */
 	function __construct()
 	{
+        // 获取APPPATH/environment/config.php内容
 		$this->config =& get_config();
 		log_message('debug', "Config Class Initialized");
 
 		// Set the base_url automatically if none was provided
+        // 设定默认的base_url配置
 		if ($this->config['base_url'] == '')
 		{
 			if (isset($_SERVER['HTTP_HOST']))
@@ -72,7 +77,6 @@ class CI_Config {
 				$base_url .= '://'. $_SERVER['HTTP_HOST'];
 				$base_url .= str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
 			}
-
 			else
 			{
 				$base_url = 'http://localhost/';
@@ -84,37 +88,45 @@ class CI_Config {
 
 	// --------------------------------------------------------------------
 
+
 	/**
+     * 加载某个配置文件
 	 * Load Config File
 	 *
 	 * @access	public
-	 * @param	string	the config file name
-	 * @param   boolean  if configuration values should be loaded into their own section
+	 * @param	string	the config file name                    文件名称
+	 * @param   boolean  if configuration values should be loaded into their own section                是否分区，每个配置文件键名做key
 	 * @param   boolean  true if errors should just return false, false if an error message should be displayed
 	 * @return	boolean	if the file was loaded correctly
 	 */
 	function load($file = '', $use_sections = FALSE, $fail_gracefully = FALSE)
 	{
+        // 不指定文件名，则默认加载config.php
 		$file = ($file == '') ? 'config' : str_replace('.php', '', $file);
 		$found = FALSE;
 		$loaded = FALSE;
 
+        // 可能的文件位置
 		$check_locations = defined('ENVIRONMENT')
 			? array(ENVIRONMENT.'/'.$file, $file)
 			: array($file);
 
+        // 现在仅有APPPATH
 		foreach ($this->_config_paths as $path)
 		{
 			foreach ($check_locations as $location)
 			{
+                // 配置文件名称
 				$file_path = $path.'config/'.$location.'.php';
 
+                // 校验是否加载过, 加载过则直接跳到$this->_config_paths这重循环，继续执行下一次循环
 				if (in_array($file_path, $this->is_loaded, TRUE))
 				{
 					$loaded = TRUE;
 					continue 2;
 				}
 
+                // 找到文件退出循环
 				if (file_exists($file_path))
 				{
 					$found = TRUE;
@@ -122,13 +134,16 @@ class CI_Config {
 				}
 			}
 
+            // 没找到文件，继续执行下一次循环
 			if ($found === FALSE)
 			{
 				continue;
 			}
 
+            // 加载配置文件
 			include($file_path);
 
+            // 校验配置文件是否合法, 配置文件都是$config数组
 			if ( ! isset($config) OR ! is_array($config))
 			{
 				if ($fail_gracefully === TRUE)
@@ -138,6 +153,7 @@ class CI_Config {
 				show_error('Your '.$file_path.' file does not appear to contain a valid configuration array.');
 			}
 
+            // 是否使用分组
 			if ($use_sections === TRUE)
 			{
 				if (isset($this->config[$file]))
@@ -151,9 +167,11 @@ class CI_Config {
 			}
 			else
 			{
+                // 合并已加载的配置
 				$this->config = array_merge($this->config, $config);
 			}
 
+            // 记录加载过的配置文件，用文件全路径标示
 			$this->is_loaded[] = $file_path;
 			unset($config);
 
@@ -162,6 +180,7 @@ class CI_Config {
 			break;
 		}
 
+        // 没加载成功，报错
 		if ($loaded === FALSE)
 		{
 			if ($fail_gracefully === TRUE)
@@ -177,12 +196,13 @@ class CI_Config {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取已加载的，配置内容
 	 * Fetch a config file item
 	 *
 	 *
 	 * @access	public
-	 * @param	string	the config item name
-	 * @param	string	the index name
+	 * @param	string	the config item name            配置项名称
+	 * @param	string	the index name                  对应load方法的use_section(配置文件名称)
 	 * @param	bool
 	 * @return	string
 	 */
@@ -336,6 +356,8 @@ class CI_Config {
 	// --------------------------------------------------------------------
 
 	/**
+     * 更新配置文项内容
+     * 1--尽量少使用，配置项应该是不变的
 	 * Set a config file item
 	 *
 	 * @access	public
@@ -351,6 +373,7 @@ class CI_Config {
 	// --------------------------------------------------------------------
 
 	/**
+     * 批量更新
 	 * Assign to Config
 	 *
 	 * This function is called by the front controller (CodeIgniter.php)

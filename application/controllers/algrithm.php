@@ -56,8 +56,6 @@ class Algrithm extends CI_Controller{
 	
 	
 	
-	
-	
 
 }
 

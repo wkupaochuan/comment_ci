@@ -135,8 +135,11 @@ if (defined('ENVIRONMENT'))
  */
 
 	// Set the current directory correctly for CLI requests
-	// 如果是CLI请求，可能在任何路径发生，所以这里将当前文件夹名称切换到当前脚本所在文件夹(即index.php所在文件夹)
-	if (defined('STDIN'))
+    /**
+     * 如果是CLI请求，可能在任何路径发生，所以这里将当前文件夹名称切换到当前脚本所在文件夹(即index.php所在文件夹)
+     * STDIN STDOUT STDERR 是cli下的三个常量
+     */
+    if (defined('STDIN'))
 	{
 		chdir(dirname(__FILE__));
 	}

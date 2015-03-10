@@ -112,7 +112,7 @@ class CI_Hooks {
 			return;
 		}
 
-		// 获取钩子定义
+		// 获取钩子定义(从文件读取配置到内存)
 		$this->hooks =& $hook;
 		$this->enabled = TRUE;
 	}
@@ -181,6 +181,7 @@ class CI_Hooks {
 		// hook call within it a loop can happen
 
 		// 钩子之间不可并行(调用钩子的地方都是单例模式,保证了in_progress的有效性)
+        // 防止重入
 		if ($this->in_progress == TRUE)
 		{
 			return;
