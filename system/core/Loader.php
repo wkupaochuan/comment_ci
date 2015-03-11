@@ -122,7 +122,7 @@ class CI_Loader {
 	 * Sets the path to the view files and gets the initial output buffering level
 	 */
 	public function __construct()
-	{	
+	{
 		//ob_level不了解
 		$this->_ci_ob_level  = ob_get_level();
 		$this->_ci_library_paths = array(APPPATH, BASEPATH);
@@ -188,6 +188,7 @@ class CI_Loader {
 	// --------------------------------------------------------------------
 
 	/**
+     * 加载library下的类
 	 * Class Loader
 	 *
 	 * This function lets users load and instantiate classes.
@@ -201,7 +202,7 @@ class CI_Loader {
 	 */
 	public function library($library = '', $params = NULL, $object_name = NULL)
 	{
-		// 如果指定了类名数组，就递归这个方法
+		// 如果指定了类名数组，就递归这个方法(这个时候object_name肯定不能递归了)
 		if (is_array($library))
 		{
 			foreach ($library as $class)
@@ -212,18 +213,19 @@ class CI_Loader {
 			return;
 		}
 
-		// 采用单例的模式，不会重复实例化某个类
+		// 这个方法只用来家来library下的类，不能为空，而且不能加载已经加载过的类
 		if ($library == '' OR isset($this->_base_classes[$library]))
 		{
 			return FALSE;
 		}
 
-		//参数params或者为空或者是一个数组
+		// 强制参数为null或者数组
 		if ( ! is_null($params) && ! is_array($params))
 		{
 			$params = NULL;
 		}
 
+        // 加载
 		$this->_ci_load_class($library, $params, $object_name);
 	}
 
@@ -912,6 +914,7 @@ class CI_Loader {
 	// --------------------------------------------------------------------
 
 	/**
+     * 加载类
 	 * Load class
 	 *
 	 * This function loads the requested class.
@@ -1041,6 +1044,7 @@ class CI_Loader {
 						}
 					}
 
+                    // 重复加载
 					$is_duplicate = TRUE;
 					log_message('debug', $class." class already loaded. Second attempt ignored.");
 					return;

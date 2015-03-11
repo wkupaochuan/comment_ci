@@ -41,11 +41,14 @@ class CI_Controller {
 		// Assign all the class objects that were instantiated by the
 		// bootstrap file (CodeIgniter.php) to local class variables
 		// so that CI can run as one big super object.
+
+        // 把所有已经加载的类实例，全部赋值成为这个类的属性值，这样CI就可以作为一个超级对象来运行了
 		foreach (is_loaded() as $var => $class)
 		{
 			$this->$var =& load_class($class);
 		}
 
+        // 加载loader类
 		$this->load =& load_class('Loader', 'core');
 
 		$this->load->initialize();

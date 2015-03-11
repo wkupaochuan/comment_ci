@@ -155,6 +155,7 @@
 	$CFG =& load_class('Config', 'core');
 
 	// Do we have any manually set config items in the index.php file?
+    // 可以在index.php文件中ing设置$assign_to_config数组，动态设置给config
 	if (isset($assign_to_config))
 	{
 		$CFG->_assign_to_config($assign_to_config);

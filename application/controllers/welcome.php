@@ -38,6 +38,13 @@ class Welcome extends CI_Controller {
 		}
 		var_dump(array_slice($array, 2, 5)) ;
 	}
+
+    public function test_md5()
+    {
+        echo md5('http://hi.baidu.com/cubeking/item/815369445be2162a11ee1e03');
+//        echo strlen(md5('dddd'));
+    }
+
 }
 
 /* End of file welcome.php */

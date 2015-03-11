@@ -207,8 +207,9 @@ if ( ! function_exists('load_class'))
 
 /**
 * 
-* 追踪已经实例化过的对象
+* 追踪已经实例化过的对象, 并返回已经加载的类数组
 * 1--记录存放在局部静态变量$_is_loaded中
+* 2--在controller中会用到
 * Keeps track of which libraries have been loaded.  This function is
 * called by the load_class() function above
 *
