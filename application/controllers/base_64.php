@@ -24,6 +24,7 @@ class base_64
     }
 
 
+
     /**
      * base64解码
      * @param $str
