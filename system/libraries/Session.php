@@ -44,10 +44,14 @@ class CI_Session {
 	var $time_reference				= 'time';
 	var $gc_probability				= 5;
 	var $userdata					= array();
+    // 超类
 	var $CI;
 	var $now;
 
 	/**
+     * 构造方法
+     *
+     *
 	 * Session Constructor
 	 *
 	 * The constructor runs the session routines automatically
@@ -55,18 +59,25 @@ class CI_Session {
 	 */
 	public function __construct($params = array())
 	{
+        // 记录调试日志
 		log_message('debug', "Session Class Initialized");
 
 		// Set the super object to a local variable for use throughout the class
+        // 获取超类, 方便在类内部使用
 		$this->CI =& get_instance();
 
 		// Set all the session preferences, which can either be set
 		// manually via the $params array above or via the config file
-		foreach (array('sess_encrypt_cookie', 'sess_use_database', 'sess_table_name', 'sess_expiration', 'sess_expire_on_close', 'sess_match_ip', 'sess_match_useragent', 'sess_cookie_name', 'cookie_path', 'cookie_domain', 'cookie_secure', 'sess_time_to_update', 'time_reference', 'cookie_prefix', 'encryption_key') as $key)
+        // 通过传递参数或者读取配置文件的方式，加载session相关配置
+		foreach (array('sess_encrypt_cookie', 'sess_use_database', 'sess_table_name', 'sess_expiration', 'sess_expire_on_close'
+                 , 'sess_match_ip', 'sess_match_useragent', 'sess_cookie_name', 'cookie_path', 'cookie_domain', 'cookie_secure'
+                 , 'sess_time_to_update', 'time_reference', 'cookie_prefix', 'encryption_key') as $key)
 		{
+            // 优先从参数获取
 			$this->$key = (isset($params[$key])) ? $params[$key] : $this->CI->config->item($key);
 		}
 
+        // 必须指定加密字段
 		if ($this->encryption_key == '')
 		{
 			show_error('In order to use the Session class you are required to set an encryption key in your config file.');
@@ -76,12 +87,14 @@ class CI_Session {
 		$this->CI->load->helper('string');
 
 		// Do we need encryption? If so, load the encryption class
+        // 如果需要加密cookie，加载加密类encrypt
 		if ($this->sess_encrypt_cookie == TRUE)
 		{
 			$this->CI->load->library('encrypt');
 		}
 
 		// Are we using a database?  If so, load it
+        // 如果使用数据库来存储session内容，需要加载数据库类
 		if ($this->sess_use_database === TRUE AND $this->sess_table_name != '')
 		{
 			$this->CI->load->database();
@@ -93,16 +106,19 @@ class CI_Session {
 
 		// Set the session length. If the session expiration is
 		// set to zero we'll set the expiration two years from now.
+        // 设置session过期时间
 		if ($this->sess_expiration == 0)
 		{
 			$this->sess_expiration = (60*60*24*365*2);
 		}
 
 		// Set the cookie name
+        // 设置cookie_name
 		$this->sess_cookie_name = $this->cookie_prefix.$this->sess_cookie_name;
 
 		// Run the Session routine. If a session doesn't exist we'll
 		// create a new one.  If it does, we'll update it.
+        // 读取session
 		if ( ! $this->sess_read())
 		{
 			$this->sess_create();
@@ -127,6 +143,7 @@ class CI_Session {
 	// --------------------------------------------------------------------
 
 	/**
+     * 读取session
 	 * Fetch the current session data if it exists
 	 *
 	 * @access	public
@@ -135,6 +152,7 @@ class CI_Session {
 	function sess_read()
 	{
 		// Fetch the cookie
+        // 从cookie中获取session
 		$session = $this->CI->input->cookie($this->sess_cookie_name);
 
 		// No cookie?  Goodbye cruel world!...
@@ -145,6 +163,7 @@ class CI_Session {
 		}
 
 		// Decrypt the cookie data
+        // 解析session_id
 		if ($this->sess_encrypt_cookie == TRUE)
 		{
 			$session = $this->CI->encrypt->decode($session);
@@ -152,8 +171,8 @@ class CI_Session {
 		else
 		{
 			// encryption was not used, so we need to check the md5 hash
-			$hash	 = substr($session, strlen($session)-32); // get last 32 chars
-			$session = substr($session, 0, strlen($session)-32);
+			$hash	 = substr($session, strlen($session)-32); // get last 32 chars(这个是md5(session.encryption_key))
+			$session = substr($session, 0, strlen($session)-32); // 这是真正的session
 
 			// Does the md5 hash match?  This is to prevent manipulation of session data in userspace
 			if ($hash !==  md5($session.$this->encryption_key))
@@ -165,6 +184,7 @@ class CI_Session {
 		}
 
 		// Unserialize the session array
+        //
 		$session = $this->_unserialize($session);
 
 		// Is the session data we unserialized an array with the correct format?
@@ -175,6 +195,7 @@ class CI_Session {
 		}
 
 		// Is the session current?
+        // 校验过期
 		if (($session['last_activity'] + $this->sess_expiration) < $this->now)
 		{
 			$this->sess_destroy();
@@ -196,6 +217,7 @@ class CI_Session {
 		}
 
 		// Is there a corresponding session in the DB?
+        // 是否在数据库里有对应的session
 		if ($this->sess_use_database === TRUE)
 		{
 			$this->CI->db->where('session_id', $session['session_id']);
@@ -213,6 +235,7 @@ class CI_Session {
 			$query = $this->CI->db->get($this->sess_table_name);
 
 			// No result?  Kill it!
+            // 未匹配到
 			if ($query->num_rows() == 0)
 			{
 				$this->sess_destroy();
@@ -297,6 +320,7 @@ class CI_Session {
 	// --------------------------------------------------------------------
 
 	/**
+     * 创建一个新的session
 	 * Create a new session
 	 *
 	 * @access	public
@@ -311,6 +335,7 @@ class CI_Session {
 		}
 
 		// To make the session ID even more secure we'll combine it with the user's IP
+        // 把session_id跟客户端ip绑定
 		$sessid .= $this->CI->input->ip_address();
 
 		$this->userdata = array(
@@ -323,6 +348,7 @@ class CI_Session {
 
 
 		// Save the data to the DB if needed
+        // 存储到数据库
 		if ($this->sess_use_database === TRUE)
 		{
 			$this->CI->db->query($this->CI->db->insert_string($this->sess_table_name, $this->userdata));
@@ -334,7 +360,9 @@ class CI_Session {
 
 	// --------------------------------------------------------------------
 
+
 	/**
+     * 更新已经存在的session
 	 * Update an existing session
 	 *
 	 * @access	public
@@ -343,6 +371,7 @@ class CI_Session {
 	function sess_update()
 	{
 		// We only update the session every five minutes by default
+        // 默认5分钟刷新一次
 		if (($this->userdata['last_activity'] + $this->sess_time_to_update) >= $this->now)
 		{
 			return;
@@ -614,6 +643,7 @@ class CI_Session {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取当前时间
 	 * Get the "now" time
 	 *
 	 * @access	private
@@ -637,6 +667,7 @@ class CI_Session {
 	// --------------------------------------------------------------------
 
 	/**
+     * 写入cookie
 	 * Write the session cookie
 	 *
 	 * @access	public
@@ -644,24 +675,29 @@ class CI_Session {
 	 */
 	function _set_cookie($cookie_data = NULL)
 	{
+        //
 		if (is_null($cookie_data))
 		{
 			$cookie_data = $this->userdata;
 		}
 
 		// Serialize the userdata for the cookie
+        // 序列化
 		$cookie_data = $this->_serialize($cookie_data);
 
+        // 加密
 		if ($this->sess_encrypt_cookie == TRUE)
 		{
 			$cookie_data = $this->CI->encrypt->encode($cookie_data);
 		}
+        // 或者采取md5的方式校验
 		else
 		{
 			// if encryption is not used, we provide an md5 hash to prevent userside tampering
 			$cookie_data = $cookie_data.md5($cookie_data.$this->encryption_key);
 		}
 
+        // 是否制定了cookie的过期时间(默认2小时)
 		$expire = ($this->sess_expire_on_close === TRUE) ? 0 : $this->sess_expiration + time();
 
 		// Set the cookie
