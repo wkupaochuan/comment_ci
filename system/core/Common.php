@@ -590,7 +590,8 @@ if ( ! function_exists('remove_invisible_characters'))
 			$non_displayables[] = '/%0[0-8bcef]/';	// url encoded 00-08, 11, 12, 14, 15
 			$non_displayables[] = '/%1[0-9a-f]/';	// url encoded 16-31
 		}
-		
+
+        // 对应ASCII码表中的字符
 		$non_displayables[] = '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/S';	// 00-08, 11, 12, 14-31, 127
 
 		// 将非法字符替换为空，直到替换完为止.第四个参数是每个parttern在subject上进行的次数,-1为无限;$count将被此次替换的次数填充,替换完毕则退出
