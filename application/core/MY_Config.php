@@ -41,4 +41,17 @@ class MY_Config extends CI_Config {
     }
 
 
+
+
+    function my_item($file, $item)
+    {
+        $file = ($file == '') ? 'config' : str_replace('.php', '', $file);
+
+        if(!$this->item($item, $file))
+        {
+            $this->load($file, true);
+        }
+        return $this->item($item, $file);
+    }
+
 }
