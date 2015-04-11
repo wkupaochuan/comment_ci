@@ -51,6 +51,7 @@ class CI_Encrypt {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取编码key(md5配置文件配置项encryption)
 	 * Fetch the encryption key
 	 *
 	 * Returns it as MD5 in order to have an exact-length 128 bit key.

@@ -234,7 +234,7 @@ if ( ! function_exists('is_loaded'))
 // ------------------------------------------------------------------------
 
 /**
-* 加载主配置文件config.php
+* 加载配置文件config.php
 * 1--单例模式,配置项存放在局部静态变量$_config数组中
 * 2--可以指定运行时替换掉的配置
 * 3--有个问题是如果想要第二次加载并替换掉不同的配置项,则返回的是上次返回的老配置
@@ -272,16 +272,22 @@ if ( ! function_exists('get_config'))
 			exit('The configuration file does not exist.');
 		}
 
-		// 这里为什么选择require而不是include,不是很清楚,也不清楚为什么没用_once
-		// 明白了,单例模式的问题.配置加载过后会放在$_config中,
-		// 但是,有个问题是,如果两次指定的replace不同,则无法处理
-		
-		// 14-01-23, 现在可以解答问题了,显然上面用的static静态变量，采用的单例模式；
-		// 就代表这个方法中加载配置文件只会执行一次，其他时间都是从静态变量中获取
-		require($file_path);
+
+        /**
+         *
+         * // 这里为什么选择require而不是include,不是很清楚,也不清楚为什么没用_once
+        // 明白了,单例模式的问题.配置加载过后会放在$_config中,
+        // 但是,有个问题是,如果两次指定的replace不同,则无法处理
+
+        // 14-01-23, 现在可以解答问题了,显然上面用的static静态变量，采用的单例模式；
+        // 就代表这个方法中加载配置文件只会执行一次，其他时间都是从静态变量中获取
+         *
+         * 最终解答:这里是加载config.php文件，这个配置文件必须存在，不存在就应该阻止后面程序的执行
+         */
+        require($file_path);
 
 		// Does the $config array exist in the file?
-		// 所有配置都放在$config数组中
+		// 检查配置文件是否合法, 所有配置都放在$config数组中
 		if ( ! isset($config) OR ! is_array($config))
 		{
 			exit('Your config file does not appear to be formatted correctly.');

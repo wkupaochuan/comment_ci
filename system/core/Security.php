@@ -107,6 +107,7 @@ class CI_Security {
 		if (config_item('csrf_protection') === TRUE)
 		{
 			// CSRF config
+            // 加载跨站请求伪造配置
 			foreach (array('csrf_expire', 'csrf_token_name', 'csrf_cookie_name') as $key)
 			{
 				if (FALSE !== ($val = config_item($key)))
@@ -264,6 +265,7 @@ class CI_Security {
 	public function xss_clean($str, $is_image = FALSE)
 	{
 		/*
+		 * 数组，递归调用
 		 * Is the string an array?
 		 *
 		 */
@@ -279,6 +281,7 @@ class CI_Security {
 
 		/*
 		 * Remove Invisible Characters
+		 * 去除不可见的字符
 		 */
 		$str = remove_invisible_characters($str);
 

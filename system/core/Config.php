@@ -31,18 +31,23 @@
 class CI_Config {
 
 	/**
+     * 已加载的配置项list
 	 * List of all loaded config values
 	 *
 	 * @var array
 	 */
 	var $config = array();
+
+
 	/**
+     * 已经加载过的全部配置文件
 	 * List of all loaded config files
 	 *
 	 * @var array
 	 */
 	var $is_loaded = array();
 	/**
+     * 配置文件路径
 	 * List of paths to search when trying to load a config file
 	 * 当需要加载配置文件的时候，搜索配置文件的路径
 	 * @var array
@@ -50,7 +55,6 @@ class CI_Config {
 	var $_config_paths = array(APPPATH);
 
 	/**
-     * 构造方法
 	 * Constructor
 	 *
 	 * Sets the $config data from the primary config.php file as a class variable
@@ -63,7 +67,7 @@ class CI_Config {
 	 */
 	function __construct()
 	{
-        // 获取APPPATH/environment/config.php内容
+        // 加载配置文件 APPPATH/environment/config.php内容
 		$this->config =& get_config();
 		log_message('debug', "Config Class Initialized");
 
@@ -90,7 +94,7 @@ class CI_Config {
 
 
 	/**
-     * 加载某个配置文件
+     * 加载配置文件
 	 * Load Config File
 	 *
 	 * @access	public
@@ -101,8 +105,12 @@ class CI_Config {
 	 */
 	function load($file = '', $use_sections = FALSE, $fail_gracefully = FALSE)
 	{
-        // 不指定文件名，则默认加载config.php
-		$file = ($file == '') ? 'config' : str_replace('.php', '', $file);
+        /**
+         * (1) 默认加载config.php
+         * (2) 去除.php后缀
+         * (3) todo 建议不加载config.php，直接返回, 构造方法已经加载过
+         */
+        $file = ($file == '') ? 'config' : str_replace('.php', '', $file);
 		$found = FALSE;
 		$loaded = FALSE;
 
@@ -111,22 +119,32 @@ class CI_Config {
 			? array(ENVIRONMENT.'/'.$file, $file)
 			: array($file);
 
-        // 现在仅有APPPATH
-		foreach ($this->_config_paths as $path)
+        /**
+         * (1) application级别的配置路径列表
+         * (2) 如果不同application下存在路径相同的配置文件，都要加载进来
+         */
+        foreach ($this->_config_paths as $path)
 		{
 			foreach ($check_locations as $location)
 			{
-                // 配置文件名称
-				$file_path = $path.'config/'.$location.'.php';
+                /**
+                 * (1) 配置文件名称
+                 * (2) 为什么又加上了.php, $file参数后面可能用来在$this->config中作为分组的key使用，所以去掉.php文件
+                 */
+                $file_path = $path.'config/'.$location.'.php';
 
-                // 校验是否加载过, 加载过则直接跳到$this->_config_paths这重循环，继续执行下一次循环
-				if (in_array($file_path, $this->is_loaded, TRUE))
+
+                /**
+                 * (0) 校验是否加载过, 加载过则直接跳到$this->_config_paths这重循环，继续执行下一次循环
+                 * (1) 解释下这里为甚continue 2, 就是加载所有application下的配置文件
+                 */
+                if (in_array($file_path, $this->is_loaded, TRUE))
 				{
 					$loaded = TRUE;
 					continue 2;
 				}
 
-                // 找到文件退出循环
+                // 找到文件退出里层循环
 				if (file_exists($file_path))
 				{
 					$found = TRUE;
@@ -140,8 +158,12 @@ class CI_Config {
 				continue;
 			}
 
-            // 加载配置文件
-			include($file_path);
+            /**
+             * (0) 加载配置文件
+             * (1) 这里加载的是相对于index.php的相对路径
+             * (2) 为什么使用include, 而不是require. 这里是加载任意的配置文件，可以不存在，只需要返回加载不到，不应该影响后面的程序执行
+             */
+            include($file_path);
 
             // 校验配置文件是否合法, 配置文件都是$config数组
 			if ( ! isset($config) OR ! is_array($config))
@@ -198,7 +220,6 @@ class CI_Config {
 	/**
      * 获取已加载的，配置内容
 	 * Fetch a config file item
-	 *
 	 *
 	 * @access	public
 	 * @param	string	the config item name            配置项名称
