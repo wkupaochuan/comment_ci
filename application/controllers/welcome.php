@@ -19,14 +19,16 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
-		echo ip2long('000.000.000.100'); exit;
-		$a = array(
-				'a'=>'dd',
-				'b'=>'bb',
-				'c'=>'cc'
-				);
-		$b = array_rand($a);
-		var_dump($b);
+        $this->config->load('test_folder/test.php', true);
+        echo $this->config->item('my_name', 'test_folder/test');
+//		echo ip2long('000.000.000.100'); exit;
+//		$a = array(
+//				'a'=>'dd',
+//				'b'=>'bb',
+//				'c'=>'cc'
+//				);
+//		$b = array_rand($a);
+//		var_dump($b);
 	}
 	
 	public function bubble_sort()
