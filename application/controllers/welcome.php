@@ -19,8 +19,11 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
-        $this->config->load('test_folder/test.php', true);
-        echo $this->config->item('my_name', 'test_folder/test');
+        $this->load->library('log');
+        $this->log->write_log('debug', 'i am debug!');
+        $this->log->my_write_log('info', 'i am info!', true);
+//        $this->config->load('test_folder/test.php', true);
+//        echo $this->config->item('my_name', 'test_folder/test');
 //		echo ip2long('000.000.000.100'); exit;
 //		$a = array(
 //				'a'=>'dd',

@@ -101,7 +101,7 @@ class CI_Log {
 		// 日志级别
 		$level = strtoupper($level);
 
-		// threshold标记了系统中可写的日志级别，只有级别高于threshold的才可以写入,thresholk默认配置为0,所以不会有日志产生
+		// threshold标记了系统中可写的日志级别，只有级别高于threshold的才可以写入,threshold默认配置为0,所以不会有日志产生
 		if ( ! isset($this->_levels[$level]) OR ($this->_levels[$level] > $this->_threshold))
 		{
 			return FALSE;
@@ -127,11 +127,15 @@ class CI_Log {
 		// 按照固定格式拼接日志内容
 		$message .= $level.' '.(($level == 'INFO') ? ' -' : '-').' '.date($this->_date_fmt). ' --> '.$msg."\n";
 
-		// 写入日志
-		flock($fp, LOCK_EX);
+        /**
+         * 写入日志文件，为了防止多个进程同时写文件，所以使用了文件锁
+         * (0) 有人写了一个代替flock的方法///http://www.cnblogs.com/web-lover/archive/2012/01/23/2615949.html
+         */
+        flock($fp, LOCK_EX);
 		fwrite($fp, $message);
 		flock($fp, LOCK_UN);
 		fclose($fp);
+
 
 		@chmod($filepath, FILE_WRITE_MODE);
 		return TRUE;
