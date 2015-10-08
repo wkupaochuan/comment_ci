@@ -17,7 +17,7 @@
 
 /**
  * Router Class
- *
+ * 解析URL并路由请求
  * Parses URIs and determines routing
  *
  * @package		CodeIgniter
@@ -85,7 +85,9 @@ class CI_Router {
 	 */
 	function __construct()
 	{
+        // 加载配置类
 		$this->config =& load_class('Config', 'core');
+        // 加载URI类
 		$this->uri =& load_class('URI', 'core');
 		log_message('debug', "Router Class Initialized");
 	}
@@ -106,6 +108,8 @@ class CI_Router {
 		// Are query strings enabled in the config file?  Normally CI doesn't utilize query strings
 		// since URI segments are more search-engine friendly, but they can optionally be used.
 		// If this feature is enabled, we will gather the directory/class/method a little differently
+
+        // 如果开启了enable_query_strings 获取路由的方式会有不同
 		$segments = array();
 		if ($this->config->item('enable_query_strings') === TRUE AND isset($_GET[$this->config->item('controller_trigger')]))
 		{
@@ -129,6 +133,7 @@ class CI_Router {
 		}
 
 		// Load the routes.php file.
+        // 记载route配置文件
 		if (defined('ENVIRONMENT') AND is_file(APPPATH.'config/'.ENVIRONMENT.'/routes.php'))
 		{
 			include(APPPATH.'config/'.ENVIRONMENT.'/routes.php');
@@ -137,24 +142,28 @@ class CI_Router {
 		{
 			include(APPPATH.'config/routes.php');
 		}
-
+        // 获取配置文件内容
 		$this->routes = ( ! isset($route) OR ! is_array($route)) ? array() : $route;
 		unset($route);
 
 		// Set the default controller so we can display it in the event
 		// the URI doesn't correlated to a valid controller.
+        // 设置默认controller
 		$this->default_controller = ( ! isset($this->routes['default_controller']) OR $this->routes['default_controller'] == '') ? FALSE : strtolower($this->routes['default_controller']);
 
 		// Were there any query string segments?  If so, we'll validate them and bail out since we're done.
+        // 校验URI
 		if (count($segments) > 0)
 		{
 			return $this->_validate_request($segments);
 		}
 
 		// Fetch the complete URI string
+        // 通过URI类获取URI
 		$this->uri->_fetch_uri_string();
 
 		// Is there a URI string? If not, the default controller specified in the "routes" file will be shown.
+        // 没有URI，则使用默认的controller
 		if ($this->uri->uri_string == '')
 		{
 			return $this->_set_default_controller();
@@ -176,6 +185,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置默认的controller
 	 * Set the default controller
 	 *
 	 * @access	private
@@ -183,11 +193,13 @@ class CI_Router {
 	 */
 	function _set_default_controller()
 	{
+        // 必须配置了default_controller
 		if ($this->default_controller === FALSE)
 		{
 			show_error("Unable to determine what should be displayed. A default route has not been specified in the routing file.");
 		}
 		// Is the method being specified?
+        // 设置 controller and method,
 		if (strpos($this->default_controller, '/') !== FALSE)
 		{
 			$x = explode('/', $this->default_controller);
@@ -212,6 +224,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置route
 	 * Set the Route
 	 *
 	 * This function takes an array of URI segments as
@@ -224,6 +237,7 @@ class CI_Router {
 	 */
 	function _set_request($segments = array())
 	{
+        // 这两句话顺序颠倒了吧
 		$segments = $this->_validate_request($segments);
 
 		if (count($segments) == 0)
@@ -254,6 +268,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     * 校验
 	 * Validates the supplied segments.  Attempts to determine the path to
 	 * the controller.
 	 *
@@ -269,23 +284,28 @@ class CI_Router {
 		}
 
 		// Does the requested controller exist in the root folder?
+        // 优先判定controllers根目录下是否有请求的 controller class
 		if (file_exists(APPPATH.'controllers/'.$segments[0].'.php'))
 		{
 			return $segments;
 		}
 
 		// Is the controller in a sub-folder?
+        // 有subdir的情况
 		if (is_dir(APPPATH.'controllers/'.$segments[0]))
 		{
 			// Set the directory and remove it from the segment array
+            // 设置dir , 并从数组中去除
 			$this->set_directory($segments[0]);
 			$segments = array_slice($segments, 1);
 
 			if (count($segments) > 0)
 			{
 				// Does the requested controller exist in the sub-folder?
+                // 如果有subdir，那么controller class 就是$segements[1]了，
 				if ( ! file_exists(APPPATH.'controllers/'.$this->fetch_directory().$segments[0].'.php'))
 				{
+                    // 根据配置展示404页面
 					if ( ! empty($this->routes['404_override']))
 					{
 						$x = explode('/', $this->routes['404_override']);
@@ -319,6 +339,7 @@ class CI_Router {
 				}
 
 				// Does the default controller exist in the sub-folder?
+                // todo, 为什么default controller找不到时，没有报404
 				if ( ! file_exists(APPPATH.'controllers/'.$this->fetch_directory().$this->default_controller.'.php'))
 				{
 					$this->directory = '';
@@ -333,6 +354,7 @@ class CI_Router {
 
 		// If we've gotten this far it means that the URI does not correlate to a valid
 		// controller class.  We will now see if there is an override
+        // 如果执行到了这，说明URI不可用，展示404即可
 		if ( ! empty($this->routes['404_override']))
 		{
 			$x = explode('/', $this->routes['404_override']);
@@ -343,7 +365,6 @@ class CI_Router {
 			return $x;
 		}
 
-
 		// Nothing else to do at this point but show a 404
 		show_404($segments[0]);
 	}
@@ -351,6 +372,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     *  解析URL
 	 *  Parse Routes
 	 *
 	 * This function matches any routes that may exist in
@@ -398,6 +420,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设定请求的class
 	 * Set the class name
 	 *
 	 * @access	public
@@ -412,6 +435,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回当前请求的class
 	 * Fetch the current class
 	 *
 	 * @access	public
@@ -425,6 +449,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置本次请求的method
 	 *  Set the method name
 	 *
 	 * @access	public
@@ -439,6 +464,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回本次请求的method
 	 *  Fetch the current method
 	 *
 	 * @access	public
@@ -457,6 +483,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     *  设置请求的dir
 	 *  Set the directory name
 	 *
 	 * @access	public
@@ -471,6 +498,7 @@ class CI_Router {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回本次请求的dir
 	 *  Fetch the sub-directory (if any) that contains the requested controller class
 	 *
 	 * @access	public

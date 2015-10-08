@@ -1,5 +1,19 @@
 <?php
 
+$a = 'abcdef';
+echo substr($a, 0, -2);
+exit;
+
+$str = 'oooooddd//';
+//$preg = '/(o+?)(.+?)/';
+$preg = '#(.+?)/*$#';
+
+preg_match($preg, $str, $match);
+print_r($match);
+
+exit();
+
+
 function my_base64($str)
 {
     if(empty($str))

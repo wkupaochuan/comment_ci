@@ -31,6 +31,11 @@ $config['index_page'] = 'index.php';
 /*
 |--------------------------------------------------------------------------
 | URI PROTOCOL
+这项决定了框架从$_SERVER的哪个变量中获取访问页面
+PATH_INFO       -- 包含由客户端提供的、跟在真实脚本名称之后并且在查询语句（query string）之前的路径信息，如果存在的话。例如，如果当前脚本是通过 URL http://www.example.com/php/path_info.php/some/stuff?foo=bar 被访问，那么 $_SERVER['PATH_INFO'] 将包含 /some/stuff。
+QUERY_STRING    -- query string（查询字符串），如果有的话，通过它进行页面访问
+REQUEST_URI     -- URI 用来指定要访问的页面。例如 “/index.html”
+ORIG_PATH_INFO  -- 在被 PHP 处理之前，“PATH_INFO” 的原始版本。
 |--------------------------------------------------------------------------
 |
 | This item determines which server global should be used to retrieve the
@@ -135,13 +140,14 @@ $config['permitted_uri_chars'] = 'a-z 0-9~%.:_\-';
 | Enable Query Strings
 | 启用查询字符串
 |--------------------------------------------------------------------------
-|
+| 默认情况下，CI采用查询有好的分段式URL
 | By default CodeIgniter uses search-engine friendly segment based URLs:
 | example.com/who/what/where/
 |
+|
 | By default CodeIgniter enables access to the $_GET array.  If for some
 | reason you would like to disable it, set 'allow_get_array' to FALSE.
-|
+| 可以选择使用查询字符串方式的URL
 | You can optionally enable standard query string based URLs:
 | example.com?who=me&what=something&where=here
 |

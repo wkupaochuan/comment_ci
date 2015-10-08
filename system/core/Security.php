@@ -472,6 +472,7 @@ class CI_Security {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回一个随机数md5值
 	 * Random Hash for protecting URLs
 	 *
 	 * @return	string
@@ -792,6 +793,7 @@ class CI_Security {
 	{
 		/*
 		 * Protect GET variables in URLs
+		 * 貌似替换了所有的&符号
 		 */
 
 		 // 901119URL5918AMP18930PROTECT8198

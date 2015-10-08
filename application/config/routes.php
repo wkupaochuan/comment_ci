@@ -38,7 +38,8 @@
 |
 */
 
-$route['default_controller'] = "welcome";
+
+$route['default_controller'] = "welcome";// 可以配置controller/action
 $route['404_override'] = '';
 
 

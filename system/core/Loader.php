@@ -165,7 +165,7 @@ class CI_Loader {
 	 * Is Loaded
 	 *
 	 * 判定某个class是否已经加载
-	 * 如果已经加载就返回类
+	 * 如果已经加载就返回类, 否则返回false
 	 * A utility function to test if a class is in the self::$_ci_classes array.
 	 * This function returns the object name if the class tested for is loaded,
 	 * and returns FALSE if it isn't.
@@ -213,7 +213,7 @@ class CI_Loader {
 			return;
 		}
 
-		// 这个方法只用来家来library下的类，不能为空，而且不能加载已经加载过的类
+		// 这个方法只用来家来library下的类，不能为空，而且不能加载组件类(例如Security, input等, 相当于这些都是关键词, 用户不可以使用这些)
 		if ($library == '' OR isset($this->_base_classes[$library]))
 		{
 			return FALSE;
@@ -340,6 +340,7 @@ class CI_Loader {
 	/**
 	 * Database Loader
 	 * 加载数据库实例
+     * 1-- 这里提出一个问题
 	 * @param	string	the DB credentials
 	 * @param	bool	whether to return the DB object
 	 * @param	bool	whether to enable active record (this allows us to override the config setting)
@@ -978,13 +979,14 @@ class CI_Loader {
 				}
 
 				// Safety:  Was the class already loaded by a previous call?
-				// 如果子类的路径经被添加过
+				// 如果子类的路径经被添加过, 如果是指定了一个新的object_name, 可以重新加载，其他清空不再重新加载
 				if (in_array($subclass, $this->_ci_loaded_files))
 				{
 					// Before we deem this to be a duplicate request, let's see
 					// if a custom object name is being supplied.  If so, we'll
 					// return a new instance of the object
 					// 如果指定了要赋值给超类CI的属性名称, 这种情况需要判断超类CI是否已经包含了这个属性；如果没有包含，则重新加载并赋值给这个属性
+                    // 猜测
 					if ( ! is_null($object_name))
 					{
 						$CI =& get_instance();

@@ -60,6 +60,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 建立数据库连接
 	 * Non-persistent database connection
 	 *
 	 * @access	private called by the base class
@@ -81,6 +82,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 假的长连接
 	 * Persistent database connection
 	 *
 	 * @access	private called by the base class
@@ -94,6 +96,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     *重连
 	 * Reconnect
 	 *
 	 * Keep / reestablish the db connection if no queries have been
@@ -113,6 +116,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 选择一个数据库
 	 * Select the database
 	 *
 	 * @access	private called by the base class
@@ -126,6 +130,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置客户端编码
 	 * Set client character set
 	 *
 	 * @access	private
@@ -154,6 +159,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 数据库版本sql
 	 * Version number query string
 	 *
 	 * @access	public
@@ -167,6 +173,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 执行sql
 	 * Execute the query
 	 *
 	 * @access	private called by the base class
@@ -209,6 +216,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 事务开始
 	 * Begin Transaction
 	 *
 	 * @access	public
@@ -240,6 +248,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 事务提交
 	 * Commit Transaction
 	 *
 	 * @access	public
@@ -266,6 +275,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 事务回滚
 	 * Rollback Transaction
 	 *
 	 * @access	public
@@ -292,6 +302,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * mysql转义str
 	 * Escape String
 	 *
 	 * @access	public
@@ -336,6 +347,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 受影响的行数
 	 * Affected Rows
 	 *
 	 * @access	public
@@ -349,6 +361,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 最后一次insert的id
 	 * Insert ID
 	 *
 	 * @access	public
@@ -362,6 +375,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取表中的record数量
 	 * "Count All" query
 	 *
 	 * Generates a platform-specific query string that counts all records in
@@ -393,6 +407,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取like的table语句
 	 * List table query
 	 *
 	 * Generates a platform-specific query string so that the table names can be fetched
@@ -416,6 +431,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 展示表中字段语句
 	 * Show column query
 	 *
 	 * Generates a platform-specific query string so that the column names can be fetched
@@ -432,6 +448,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取表结构语句
 	 * Field data query
 	 *
 	 * Generates a platform-specific query so that the column data can be retrieved
@@ -448,6 +465,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取错误信息
 	 * The error message string
 	 *
 	 * @access	private
@@ -461,6 +479,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取错误编码
 	 * The error message number
 	 *
 	 * @access	private
@@ -474,6 +493,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 转义
 	 * Escape the SQL Identifiers
 	 *
 	 * This function escapes column and table names
@@ -538,6 +558,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * insert语句
 	 * Insert statement
 	 *
 	 * Generates a platform-specific insert string from the supplied data
@@ -593,6 +614,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 更新语句
 	 * Update statement
 	 *
 	 * Generates a platform-specific update string from the supplied data
@@ -680,6 +702,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 清空表
 	 * Truncate statement
 	 *
 	 * Generates a platform-specific truncate string from the supplied data
@@ -698,6 +721,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 删除语句
 	 * Delete statement
 	 *
 	 * Generates a platform-specific delete string from the supplied data
@@ -732,6 +756,8 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * limit语句
+     * 1--跟mysql_driver中可以一样
 	 * Limit string
 	 *
 	 * Generates a platform-specific LIMIT clause
@@ -757,6 +783,7 @@ class CI_DB_mysqli_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 关闭连接
 	 * Close DB Connection
 	 *
 	 * @access	public

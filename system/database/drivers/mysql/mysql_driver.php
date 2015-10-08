@@ -30,9 +30,10 @@
  */
 class CI_DB_mysql_driver extends CI_DB {
 
+    // 数据库驱动名称
 	var $dbdriver = 'mysql';
 
-	// The character used for escaping
+	// The character used for escaping, 转义字符
 	var	$_escape_char = '`';
 
 	// clause and character used for LIKE escape sequences - not used in MySQL
@@ -47,6 +48,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	var $delete_hack = TRUE;
 
 	/**
+     * 不同的数据库中count语法不一样
 	 * The syntax to count rows is slightly different across different
 	 * database engines, so this string appears in each driver and is
 	 * used for the count_all() and count_all_results() functions.
@@ -58,9 +60,10 @@ class CI_DB_mysql_driver extends CI_DB {
 	var $use_set_names;
 	
 	/**
+     * 连接数据库(非长连接)
 	 * Non-persistent database connection
 	 *
-	 * @access	private called by the base class
+	 * @access	private called by the base class  基类有权限调用
 	 * @return	resource
 	 */
 	function db_connect()
@@ -76,6 +79,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 长连接
 	 * Persistent database connection
 	 *
 	 * @access	private called by the base class
@@ -94,6 +98,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 重新连接，失败后返回false
 	 * Reconnect
 	 *
 	 * Keep / reestablish the db connection if no queries have been
@@ -113,6 +118,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 选择一个数据库
 	 * Select the database
 	 *
 	 * @access	private called by the base class
@@ -126,6 +132,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置字符集
 	 * Set client character set
 	 *
 	 * @access	public
@@ -154,6 +161,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查看mysql版本sql语句
 	 * Version number query string
 	 *
 	 * @access	public
@@ -167,6 +175,9 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 执行一条sql
+     * 1--所有的数据库操作都从这经过，每个传递过来的sql最好是经过转义的
+     * 2--每次执行一条sql
 	 * Execute the query
 	 *
 	 * @access	private called by the base class
@@ -183,6 +194,7 @@ class CI_DB_mysql_driver extends CI_DB {
 
 	/**
 	 * Prep the query
+     * 1-- 这里仅仅处理了'delete from table'会报错的情况
 	 *
 	 * If needed, each database adapter can prep the query string
 	 *
@@ -215,12 +227,14 @@ class CI_DB_mysql_driver extends CI_DB {
 	 */
 	function trans_begin($test_mode = FALSE)
 	{
+        // 默认都是允许事务的
 		if ( ! $this->trans_enabled)
 		{
 			return TRUE;
 		}
 
 		// When transactions are nested we only begin/commit/rollback the outermost ones
+        // 通过$this->_trans_depth的计数，来计算事务的嵌套层级，只在最外层的事务begin and rollback
 		if ($this->_trans_depth > 0)
 		{
 			return TRUE;
@@ -229,6 +243,7 @@ class CI_DB_mysql_driver extends CI_DB {
 		// Reset the transaction failure flag.
 		// If the $test_mode flag is set to TRUE transactions will be rolled back
 		// even if the queries produce a successful result.
+        // test 模式下，执行成功的sql也会rollback
 		$this->_trans_failure = ($test_mode === TRUE) ? TRUE : FALSE;
 
 		$this->simple_query('SET AUTOCOMMIT=0');
@@ -239,6 +254,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 提交事务
 	 * Commit Transaction
 	 *
 	 * @access	public
@@ -265,6 +281,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 事务回滚
 	 * Rollback Transaction
 	 *
 	 * @access	public
@@ -291,6 +308,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 转义字符串
 	 * Escape String
 	 *
 	 * @access	public
@@ -324,6 +342,7 @@ class CI_DB_mysql_driver extends CI_DB {
 		}
 
 		// escape LIKE condition wildcards
+
 		if ($like === TRUE)
 		{
 			$str = str_replace(array('%', '_'), array('\\%', '\\_'), $str);
@@ -335,6 +354,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 最近一次查询影响的条数
 	 * Affected Rows
 	 *
 	 * @access	public
@@ -348,6 +368,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 最近一次insert操作产生的auto_increament值
 	 * Insert ID
 	 *
 	 * @access	public
@@ -361,6 +382,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询一条表的record数量
 	 * "Count All" query
 	 *
 	 * Generates a platform-specific query string that counts all records in
@@ -392,6 +414,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 列出like的表名称
 	 * List table query
 	 *
 	 * Generates a platform-specific query string so that the table names can be fetched
@@ -415,6 +438,8 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取表中的字段
+     * 获取表中的字段
 	 * Show column query
 	 *
 	 * Generates a platform-specific query string so that the column names can be fetched
@@ -431,6 +456,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取展示表结构语句
 	 * Field data query
 	 *
 	 * Generates a platform-specific query so that the column data can be retrieved
@@ -447,6 +473,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取错误信息
 	 * The error message string
 	 *
 	 * @access	private
@@ -460,6 +487,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取错误编码
 	 * The error message number
 	 *
 	 * @access	private
@@ -473,6 +501,8 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 转义sql中的表名、字段名
+     * 1-- 这里只针对单个字符串(item)
 	 * Escape the SQL Identifiers
 	 *
 	 * This function escapes column and table names
@@ -483,32 +513,40 @@ class CI_DB_mysql_driver extends CI_DB {
 	 */
 	function _escape_identifiers($item)
 	{
+        // 默认设置转义字符为`
 		if ($this->_escape_char == '')
 		{
 			return $item;
 		}
 
+
+        // 如果是不需要转义的*
 		foreach ($this->_reserved_identifiers as $id)
 		{
 			if (strpos($item, '.'.$id) !== FALSE)
 			{
+                // xx.*  => `xx`.*
 				$str = $this->_escape_char. str_replace('.', $this->_escape_char.'.', $item);
 
 				// remove duplicates if the user already included the escape
+                // 去除重复的`
 				return preg_replace('/['.$this->_escape_char.']+/', $this->_escape_char, $str);
 			}
 		}
 
 		if (strpos($item, '.') !== FALSE)
 		{
+            // xx.a => `xx`.`a`
 			$str = $this->_escape_char.str_replace('.', $this->_escape_char.'.'.$this->_escape_char, $item).$this->_escape_char;
 		}
 		else
 		{
+            // xx => `xx`
 			$str = $this->_escape_char.$item.$this->_escape_char;
 		}
 
 		// remove duplicates if the user already included the escape
+        // 去除重复的`
 		return preg_replace('/['.$this->_escape_char.']+/', $this->_escape_char, $str);
 	}
 
@@ -537,6 +575,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 组装insert语句
 	 * Insert statement
 	 *
 	 * Generates a platform-specific insert string from the supplied data
@@ -556,6 +595,7 @@ class CI_DB_mysql_driver extends CI_DB {
 
 
 	/**
+     * 组装replace语句
 	 * Replace statement
 	 *
 	 * Generates a platform-specific replace string from the supplied data
@@ -574,6 +614,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 组装批量insert语句
 	 * Insert_batch statement
 	 *
 	 * Generates a platform-specific insert string from the supplied data
@@ -593,6 +634,7 @@ class CI_DB_mysql_driver extends CI_DB {
 
 
 	/**
+     * 组装update语句
 	 * Update statement
 	 *
 	 * Generates a platform-specific update string from the supplied data
@@ -682,6 +724,7 @@ class CI_DB_mysql_driver extends CI_DB {
 
 
 	/**
+     * 删除语句
 	 * Truncate statement
 	 *
 	 * Generates a platform-specific truncate string from the supplied data
@@ -700,6 +743,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 删除语句
 	 * Delete statement
 	 *
 	 * Generates a platform-specific delete string from the supplied data
@@ -734,6 +778,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * limit语句
 	 * Limit string
 	 *
 	 * Generates a platform-specific LIMIT clause
@@ -761,6 +806,7 @@ class CI_DB_mysql_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 关闭一个非持久连接，pconnect是无法关掉的。通常情况下不需要手动关闭连接，脚本执行结束，会自动释放
 	 * Close DB Connection
 	 *
 	 * @access	public

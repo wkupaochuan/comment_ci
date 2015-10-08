@@ -17,7 +17,7 @@
 
 /**
  * Active Record Class
- *
+ * 独立于平台
  * This is the platform-independent base Active Record implementation class.
  *
  * @package		CodeIgniter
@@ -65,6 +65,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询
 	 * Select
 	 *
 	 * Generates the SELECT portion of the query
@@ -74,6 +75,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	 */
 	public function select($select = '*', $escape = NULL)
 	{
+        // 支持逗号分隔的字符串和数组
 		if (is_string($select))
 		{
 			$select = explode(',', $select);
@@ -81,13 +83,17 @@ class CI_DB_active_record extends CI_DB_driver {
 
 		foreach ($select as $val)
 		{
+            // 去除空格
 			$val = trim($val);
 
 			if ($val != '')
 			{
+                // 记录查询字段
 				$this->ar_select[] = $val;
+                // 记录对应的查询字段是否转义
 				$this->ar_no_escape[] = $escape;
 
+                // 缓存
 				if ($this->ar_caching === TRUE)
 				{
 					$this->ar_cache_select[] = $val;
@@ -102,6 +108,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询max
 	 * Select Max
 	 *
 	 * Generates a SELECT MAX(field) portion of a query
@@ -118,6 +125,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询min
 	 * Select Min
 	 *
 	 * Generates a SELECT MIN(field) portion of a query
@@ -134,6 +142,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询avg
 	 * Select Average
 	 *
 	 * Generates a SELECT AVG(field) portion of a query
@@ -150,6 +159,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询sum
 	 * Select Sum
 	 *
 	 * Generates a SELECT SUM(field) portion of a query
@@ -166,6 +176,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     *
 	 * Processing Function for the four functions above:
 	 *
 	 *	select_max()
@@ -179,25 +190,31 @@ class CI_DB_active_record extends CI_DB_driver {
 	 */
 	protected function _max_min_avg_sum($select = '', $alias = '', $type = 'MAX')
 	{
+        // 只支持字符串
 		if ( ! is_string($select) OR $select == '')
 		{
 			$this->display_error('db_invalid_query');
 		}
 
+        // 大写
 		$type = strtoupper($type);
 
+        // 在规定类型之内
 		if ( ! in_array($type, array('MAX', 'MIN', 'AVG', 'SUM')))
 		{
 			show_error('Invalid function type: '.$type);
 		}
 
+        // 处理别名
 		if ($alias == '')
 		{
 			$alias = $this->_create_alias_from_table(trim($select));
 		}
 
+        // 构造查询select
 		$sql = $type.'('.$this->_protect_identifiers(trim($select)).') AS '.$alias;
 
+        // 记录查询
 		$this->ar_select[] = $sql;
 
 		if ($this->ar_caching === TRUE)
@@ -212,6 +229,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 从table.column中获取column
 	 * Determines the alias name based on the table
 	 *
 	 * @param	string
@@ -246,6 +264,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 构建from部分
 	 * From
 	 *
 	 * Generates the FROM portion of the query
@@ -255,8 +274,10 @@ class CI_DB_active_record extends CI_DB_driver {
 	 */
 	public function from($from)
 	{
+        // 按照数组处理
 		foreach ((array) $from as $val)
 		{
+            // 多个表
 			if (strpos($val, ',') !== FALSE)
 			{
 				foreach (explode(',', $val) as $v)
@@ -264,8 +285,10 @@ class CI_DB_active_record extends CI_DB_driver {
 					$v = trim($v);
 					$this->_track_aliases($v);
 
+                    // 记录from
 					$this->ar_from[] = $this->_protect_identifiers($v, TRUE, NULL, FALSE);
 
+                    // 缓存
 					if ($this->ar_caching === TRUE)
 					{
 						$this->ar_cache_from[] = $this->_protect_identifiers($v, TRUE, NULL, FALSE);
@@ -309,6 +332,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	 */
 	public function join($table, $cond, $type = '')
 	{
+        // join类型
 		if ($type != '')
 		{
 			$type = strtoupper(trim($type));
@@ -325,9 +349,11 @@ class CI_DB_active_record extends CI_DB_driver {
 
 		// Extract any aliases that might exist.  We use this information
 		// in the _protect_identifiers to know whether to add a table prefix
+        // 记录表别名
 		$this->_track_aliases($table);
 
 		// Strip apart the condition and protect the identifiers
+        // todo 不明白
 		if (preg_match('/([\w\.]+)([\W\s]+)(.+)/', $cond, $match))
 		{
 			$match[1] = $this->_protect_identifiers($match[1]);
@@ -337,6 +363,7 @@ class CI_DB_active_record extends CI_DB_driver {
 		}
 
 		// Assemble the JOIN statement
+        // 组装join
 		$join = $type.'JOIN '.$this->_protect_identifiers($table, TRUE, NULL, FALSE).' ON '.$cond;
 
 		$this->ar_join[] = $join;
@@ -408,6 +435,7 @@ class CI_DB_active_record extends CI_DB_driver {
 			$escape = $this->_protect_identifiers;
 		}
 
+        // 组装where
 		foreach ($key as $k => $v)
 		{
 			$prefix = (count($this->ar_where) == 0 AND count($this->ar_cache_where) == 0) ? '' : $type;
@@ -437,8 +465,10 @@ class CI_DB_active_record extends CI_DB_driver {
 				$k = $this->_protect_identifiers($k, FALSE, $escape);
 			}
 
+            // 记录where
 			$this->ar_where[] = $prefix.$k.$v;
 
+            // 缓存
 			if ($this->ar_caching === TRUE)
 			{
 				$this->ar_cache_where[] = $prefix.$k.$v;
@@ -648,6 +678,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	 */
 	protected function _like($field, $match = '', $type = 'AND ', $side = 'both', $not = '')
 	{
+        // 支持数组
 		if ( ! is_array($field))
 		{
 			$field = array($field => $match);
@@ -655,10 +686,13 @@ class CI_DB_active_record extends CI_DB_driver {
 
 		foreach ($field as $k => $v)
 		{
+            // 前缀
 			$k = $this->_protect_identifiers($k);
 
+            // 是否有or 或者 and
 			$prefix = (count($this->ar_like) == 0) ? '' : $type;
 
+            // 转义v
 			$v = $this->escape_like_str($v);
 			
 			if ($side == 'none')
@@ -684,6 +718,7 @@ class CI_DB_active_record extends CI_DB_driver {
 				$like_statement = $like_statement.sprintf($this->_like_escape_str, $this->_like_escape_chr);
 			}
 
+            // 记录like
 			$this->ar_like[] = $like_statement;
 			if ($this->ar_caching === TRUE)
 			{
@@ -826,6 +861,7 @@ class CI_DB_active_record extends CI_DB_driver {
 		}
 		elseif (trim($direction) != '')
 		{
+            // 默认升序
 			$direction = (in_array(strtoupper(trim($direction)), array('ASC', 'DESC'), TRUE)) ? ' '.$direction : ' ASC';
 		}
 
@@ -910,8 +946,10 @@ class CI_DB_active_record extends CI_DB_driver {
 	 */
 	public function set($key, $value = '', $escape = TRUE)
 	{
+        // 支持对象
 		$key = $this->_object_to_array($key);
 
+        // 支持数组
 		if ( ! is_array($key))
 		{
 			$key = array($key => $value);
@@ -935,6 +973,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询
 	 * Get
 	 *
 	 * Compiles the select statement based on the other functions called
@@ -958,14 +997,18 @@ class CI_DB_active_record extends CI_DB_driver {
 			$this->limit($limit, $offset);
 		}
 
+        // 根据之前的select from 等条件，组装sql语句
 		$sql = $this->_compile_select();
 
+        // 执行sql
 		$result = $this->query($sql);
+        // 清空所有条件
 		$this->_reset_select();
 		return $result;
 	}
 
 	/**
+     * 计算行数
 	 * "Count All Results" query
 	 *
 	 * Generates a platform-specific query string that counts all records
@@ -999,6 +1042,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 待条件查询
 	 * Get_Where
 	 *
 	 * Allows the where clause, limit and offset to be added directly
@@ -1035,6 +1079,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 批量新增
 	 * Insert_Batch
 	 *
 	 * Compiles batch insert strings and runs the queries
@@ -1050,6 +1095,7 @@ class CI_DB_active_record extends CI_DB_driver {
 			$this->set_insert_batch($set);
 		}
 
+        // insert数据全部保存到ar_set中，且不可为空
 		if (count($this->ar_set) == 0)
 		{
 			if ($this->db_debug)
@@ -1075,9 +1121,9 @@ class CI_DB_active_record extends CI_DB_driver {
 		}
 
 		// Batch this baby
+        // 每批100个
 		for ($i = 0, $total = count($this->ar_set); $i < $total; $i = $i + 100)
 		{
-
 			$sql = $this->_insert_batch($this->_protect_identifiers($table, TRUE, NULL, FALSE), $this->ar_keys, array_slice($this->ar_set, $i, 100));
 
 			//echo $sql;
@@ -1085,8 +1131,8 @@ class CI_DB_active_record extends CI_DB_driver {
 			$this->query($sql);
 		}
 
+        // 重置write
 		$this->_reset_write();
-
 
 		return TRUE;
 	}
@@ -1094,6 +1140,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 批量设置insert
 	 * The "set_insert_batch" function.  Allows key/value pairs to be set for batch inserts
 	 *
 	 * @param	mixed
@@ -1103,18 +1150,22 @@ class CI_DB_active_record extends CI_DB_driver {
 	 */
 	public function set_insert_batch($key, $value = '', $escape = TRUE)
 	{
+        // 支持对象
 		$key = $this->_object_to_array_batch($key);
 
+        // 支持单个
 		if ( ! is_array($key))
 		{
 			$key = array($key => $value);
 		}
 
+        // 获取所有字段, 并排序 array(0=>array('name' => 'jim', 'age'=>10)) => array('name', 'age')
 		$keys = array_keys(current($key));
 		sort($keys);
 
 		foreach ($key as $row)
 		{
+            // 批量更新的时候，每个数组的key必须相同
 			if (count(array_diff($keys, array_keys($row))) > 0 OR count(array_diff(array_keys($row), $keys)) > 0)
 			{
 				// batch function above returns an error on an empty array
@@ -1122,6 +1173,7 @@ class CI_DB_active_record extends CI_DB_driver {
 				return;
 			}
 
+            // 每个数组内的key的顺序可以不同，这里会做排序
 			ksort($row); // puts $row in the same order as our keys
 
 			if ($escape === FALSE)
@@ -1152,6 +1204,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 新增
 	 * Insert
 	 *
 	 * Compiles an insert string and runs the query
@@ -1167,6 +1220,7 @@ class CI_DB_active_record extends CI_DB_driver {
 			$this->set($set);
 		}
 
+        // 没有新值报错
 		if (count($this->ar_set) == 0)
 		{
 			if ($this->db_debug)
@@ -1190,15 +1244,19 @@ class CI_DB_active_record extends CI_DB_driver {
 			$table = $this->ar_from[0];
 		}
 
+        // 组装sql语句
 		$sql = $this->_insert($this->_protect_identifiers($table, TRUE, NULL, FALSE), array_keys($this->ar_set), array_values($this->ar_set));
 
+        // 清空条件
 		$this->_reset_write();
+        // 执行
 		return $this->query($sql);
 	}
 
 	// --------------------------------------------------------------------
 
 	/**
+     * 替换, 大致同insert
 	 * Replace
 	 *
 	 * Compiles an replace into string and runs the query
@@ -1246,6 +1304,8 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 更新
+     * 1--不支持like条件
 	 * Update
 	 *
 	 * Compiles an update string and runs the query
@@ -1265,6 +1325,7 @@ class CI_DB_active_record extends CI_DB_driver {
 			$this->set($set);
 		}
 
+        // 新值不可为空
 		if (count($this->ar_set) == 0)
 		{
 			if ($this->db_debug)
@@ -1274,6 +1335,7 @@ class CI_DB_active_record extends CI_DB_driver {
 			return FALSE;
 		}
 
+        // 必须指定table
 		if ($table == '')
 		{
 			if ( ! isset($this->ar_from[0]))
@@ -1288,19 +1350,24 @@ class CI_DB_active_record extends CI_DB_driver {
 			$table = $this->ar_from[0];
 		}
 
+        // 指定where
 		if ($where != NULL)
 		{
 			$this->where($where);
 		}
 
+        // 指定limit
 		if ($limit != NULL)
 		{
 			$this->limit($limit);
 		}
 
+        // 构建update语句
 		$sql = $this->_update($this->_protect_identifiers($table, TRUE, NULL, FALSE), $this->ar_set, $this->ar_where, $this->ar_orderby, $this->ar_limit);
 
+        // 重置更新
 		$this->_reset_write();
+        // 执行
 		return $this->query($sql);
 	}
 
@@ -1442,6 +1509,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 清空表
 	 * Empty Table
 	 *
 	 * Compiles a delete string and runs "DELETE FROM table"
@@ -1479,6 +1547,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 清空表
 	 * Truncate
 	 *
 	 * Compiles a truncate string and runs the query
@@ -1519,6 +1588,7 @@ class CI_DB_active_record extends CI_DB_driver {
 
 	/**
 	 * Delete
+     * 不支持where_in
 	 *
 	 * Compiles a delete string and runs the query
 	 *
@@ -1533,6 +1603,7 @@ class CI_DB_active_record extends CI_DB_driver {
 		// Combine any cached components with the current statements
 		$this->_merge_cache();
 
+        // 指定表
 		if ($table == '')
 		{
 			if ( ! isset($this->ar_from[0]))
@@ -1571,6 +1642,7 @@ class CI_DB_active_record extends CI_DB_driver {
 			$this->limit($limit);
 		}
 
+        // 不允许无条件删除
 		if (count($this->ar_where) == 0 && count($this->ar_wherein) == 0 && count($this->ar_like) == 0)
 		{
 			if ($this->db_debug)
@@ -1594,6 +1666,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 给表增加前缀
 	 * DB Prefix
 	 *
 	 * Prepends a database prefix if one exists in configuration
@@ -1614,6 +1687,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置表前缀
 	 * Set DB Prefix
 	 *
 	 * Set's the DB Prefix to something new without needing to reconnect
@@ -1629,6 +1703,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 记录表别名
 	 * Track Aliases
 	 *
 	 * Used to track SQL statements written with aliased tables.
@@ -1638,6 +1713,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	 */
 	protected function _track_aliases($table)
 	{
+        // 递归处理数组
 		if (is_array($table))
 		{
 			foreach ($table as $t)
@@ -1658,12 +1734,14 @@ class CI_DB_active_record extends CI_DB_driver {
 		if (strpos($table, " ") !== FALSE)
 		{
 			// if the alias is written with the AS keyword, remove it
+            // 去掉as or AS
 			$table = preg_replace('/\s+AS\s+/i', ' ', $table);
 
 			// Grab the alias
 			$table = trim(strrchr($table, " "));
 
 			// Store the alias, if it doesn't already exist
+            // 记录别名
 			if ( ! in_array($table, $this->ar_aliased_tables))
 			{
 				$this->ar_aliased_tables[] = $table;
@@ -1674,6 +1752,8 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 组装sql语句
+     * 1--根据之前所有的条件
 	 * Compile the SELECT statement
 	 *
 	 * Generates a query string based on which functions were used.
@@ -1684,6 +1764,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	protected function _compile_select($select_override = FALSE)
 	{
 		// Combine any cached components with the current statements
+        // 暂时没发现缓存在哪开启
 		$this->_merge_cache();
 
 		// ----------------------------------------------------------------
@@ -1707,6 +1788,7 @@ class CI_DB_active_record extends CI_DB_driver {
 				// Cycle through the "select" portion of the query and prep each column name.
 				// The reason we protect identifiers here rather then in the select() function
 				// is because until the user calls the from() function we don't know if there are aliases
+                // todo aliase的问题需要搞清楚
 				foreach ($this->ar_select as $key => $val)
 				{
 					$no_escape = isset($this->ar_no_escape[$key]) ? $this->ar_no_escape[$key] : NULL;
@@ -1742,6 +1824,7 @@ class CI_DB_active_record extends CI_DB_driver {
 		// ----------------------------------------------------------------
 
 		// Write the "WHERE" portion of the query
+        // 这里把where和like强制拍了顺序，那么索引就可能不生效了
 
 		if (count($this->ar_where) > 0 OR count($this->ar_like) > 0)
 		{
@@ -1756,6 +1839,7 @@ class CI_DB_active_record extends CI_DB_driver {
 
 		if (count($this->ar_like) > 0)
 		{
+            // ar_like内部会计数, 会判断and or
 			if (count($this->ar_where) > 0)
 			{
 				$sql .= "\nAND ";
@@ -1807,15 +1891,18 @@ class CI_DB_active_record extends CI_DB_driver {
 		if (is_numeric($this->ar_limit))
 		{
 			$sql .= "\n";
+            // limit在各种数据库不同，所以放到子类实现
 			$sql = $this->_limit($sql, $this->ar_limit, $this->ar_offset);
 		}
 
+        // 返回sql
 		return $sql;
 	}
 
 	// --------------------------------------------------------------------
 
 	/**
+     * 对象转化为数组
 	 * Object to Array
 	 *
 	 * Takes an object as input and converts the class variables to array key/vals
@@ -1846,6 +1933,9 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 对象转化为数组
+     * 1--比较难理解，举个例子
+     * class pserson{$name = array('jim', 'jack'), $age=array('10', '11')} 转化为 array(0=>array('name' => 'jim', 'age' => '10'), 1=>array());
 	 * Object to Array
 	 *
 	 * Takes an object as input and converts the class variables to array key/vals
@@ -1940,6 +2030,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 把缓存的merge到现有的
 	 * Merge Cache
 	 *
 	 * When called, this function merges any cached AR arrays with
@@ -1999,6 +2090,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 重置所有条件
 	 * Resets the active record values.  Called by the get() function
 	 *
 	 * @return	void
@@ -2029,6 +2121,7 @@ class CI_DB_active_record extends CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 重置所有写值、条件等
 	 * Resets the active record "write" values.
 	 *
 	 * Called by the insert() update() insert_batch() update_batch() and delete() functions

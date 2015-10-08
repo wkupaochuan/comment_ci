@@ -26,6 +26,7 @@ class CI_DB_Cache {
 
 	var $CI;
 	var $db;	// allows passing of db object so that multiple database connections and returned db objects can be supported
+    var $_redis;
 
 	/**
 	 * Constructor
@@ -40,6 +41,9 @@ class CI_DB_Cache {
 		$this->CI =& get_instance();
 		$this->db =& $db;
 		$this->CI->load->helper('file');
+
+        $this->_redis = new Redis();
+        $this->_redis->connect('127.0.0.1',6379);
 	}
 
 	// --------------------------------------------------------------------
@@ -59,11 +63,13 @@ class CI_DB_Cache {
 			{
 				return $this->db->cache_off();
 			}
-
 			$path = $this->db->cachedir;
 		}
 
 		// Add a trailing slash to the path if needed
+        // 替换掉第一个捕获子组，后面添加一个/
+        // 无论path末尾是否有/， 都改成末尾有一个/
+        // 学习了贪心
 		$path = preg_replace("/(.+?)\/*$/", "\\1/",  $path);
 
 		if ( ! is_dir($path) OR ! is_really_writable($path))
@@ -94,16 +100,28 @@ class CI_DB_Cache {
 			return $this->db->cache_off();
 		}
 
-		$segment_one = ($this->CI->uri->segment(1) == FALSE) ? 'default' : $this->CI->uri->segment(1);
+        if($this->db->cache_from == 'redis')
+        {
+            $cachedata = $this->_redis->get(md5($sql));
+            if(!$cachedata)
+            {
+                return FALSE;
+            }
+        }
+        else{
+            $segment_one = ($this->CI->uri->segment(1) == FALSE) ? 'default' : $this->CI->uri->segment(1);
 
-		$segment_two = ($this->CI->uri->segment(2) == FALSE) ? 'index' : $this->CI->uri->segment(2);
+            $segment_two = ($this->CI->uri->segment(2) == FALSE) ? 'index' : $this->CI->uri->segment(2);
 
-		$filepath = $this->db->cachedir.$segment_one.'+'.$segment_two.'/'.md5($sql);
+            $filepath = $this->db->cachedir.$segment_one.'+'.$segment_two.'/'.md5($sql);
 
-		if (FALSE === ($cachedata = read_file($filepath)))
-		{
-			return FALSE;
-		}
+            if (FALSE === ($cachedata = read_file($filepath)))
+            {
+                return FALSE;
+            }
+        }
+
+
 
 		return unserialize($cachedata);
 	}
@@ -131,22 +149,29 @@ class CI_DB_Cache {
 
 		$filename = md5($sql);
 
-		if ( ! @is_dir($dir_path))
-		{
-			if ( ! @mkdir($dir_path, DIR_WRITE_MODE))
-			{
-				return FALSE;
-			}
+        if($this->db->cache_from == 'redis')
+        {
+            $this->_redis->set($filename, serialize($object));
+        }
+        else{
+            if ( ! @is_dir($dir_path))
+            {
+                if ( ! @mkdir($dir_path, DIR_WRITE_MODE))
+                {
+                    return FALSE;
+                }
 
-			@chmod($dir_path, DIR_WRITE_MODE);
-		}
+                @chmod($dir_path, DIR_WRITE_MODE);
+            }
 
-		if (write_file($dir_path.$filename, serialize($object)) === FALSE)
-		{
-			return FALSE;
-		}
+            if (write_file($dir_path.$filename, serialize($object)) === FALSE)
+            {
+                return FALSE;
+            }
 
-		@chmod($dir_path.$filename, FILE_WRITE_MODE);
+            @chmod($dir_path.$filename, FILE_WRITE_MODE);
+        }
+
 		return TRUE;
 	}
 

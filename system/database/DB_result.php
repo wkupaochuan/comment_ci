@@ -16,6 +16,7 @@
 // ------------------------------------------------------------------------
 
 /**
+ * 结果类的作用主要是selet类型的操作使用
  * Database Result Class
  *
  * This is the platform-independent result class.
@@ -28,8 +29,12 @@
  */
 class CI_DB_result {
 
+    // 数据库连接，调用者赋值
 	var $conn_id				= NULL;
+    // 执行结果, 调用者赋值
 	var $result_id				= NULL;
+
+    // 缓存查询本次查询结果到内存，供后续使用(仅仅是查询结果, 再次发起新sql查询，结果对象重新实例化，结果缓存丢失)
 	var $result_array			= array();
 	var $result_object			= array();
 	var $custom_result_object	= array();
@@ -39,6 +44,7 @@ class CI_DB_result {
 
 
 	/**
+     * 查询结果
 	 * Query result.  Acts as a wrapper function for the following functions.
 	 *
 	 * @access	public
@@ -55,6 +61,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回对象格式的结果，指定类
 	 * Custom query result.
 	 *
 	 * @param class_name A string that represents the type of object you want back
@@ -95,6 +102,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询结果，对象方式
 	 * Query result.  "object" version.
 	 *
 	 * @access	public
@@ -127,6 +135,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回数组格式的查询结果
 	 * Query result.  "array" version.
 	 *
 	 * @access	public
@@ -159,6 +168,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询一行，支持行数选择
 	 * Query result.  Acts as a wrapper function for the following functions.
 	 *
 	 * @access	public
@@ -168,6 +178,7 @@ class CI_DB_result {
 	 */
 	public function row($n = 0, $type = 'object')
 	{
+        // 如果$n不是数组，则当做一个key来用
 		if ( ! is_numeric($n))
 		{
 			// We cache the row data for subsequent uses
@@ -193,6 +204,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置结果值，没看到太多用处
 	 * Assigns an item into a particular column slot
 	 *
 	 * @access	public
@@ -206,6 +218,7 @@ class CI_DB_result {
 			$this->row_data = $this->row_array(0);
 		}
 
+        // 支持数组($key参数中，包含key=>value)
 		if (is_array($key))
 		{
 			foreach ($key as $k => $v)
@@ -225,6 +238,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 按照对象的方式返回一行，并指定类型
 	 * Returns a single result row - custom object version
 	 *
 	 * @access	public
@@ -248,6 +262,7 @@ class CI_DB_result {
 	}
 
 	/**
+     * 按照对象的方式返回一行
 	 * Returns a single result row - object version
 	 *
 	 * @access	public
@@ -273,6 +288,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 按照数组的方式返回一行
 	 * Returns a single result row - array version
 	 *
 	 * @access	public
@@ -280,8 +296,10 @@ class CI_DB_result {
 	 */
 	public function row_array($n = 0)
 	{
+        // 缓存所有结果
 		$result = $this->result_array();
 
+        // 查询结果为空
 		if (count($result) == 0)
 		{
 			return $result;
@@ -299,6 +317,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回第一行
 	 * Returns the "first" row
 	 *
 	 * @access	public
@@ -318,6 +337,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回最后一行
 	 * Returns the "last" row
 	 *
 	 * @access	public
@@ -337,6 +357,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回下一行
 	 * Returns the "next" row
 	 *
 	 * @access	public
@@ -362,6 +383,7 @@ class CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回上一行
 	 * Returns the "previous" row
 	 *
 	 * @access	public

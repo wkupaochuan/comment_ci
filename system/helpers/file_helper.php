@@ -104,6 +104,9 @@ if ( ! function_exists('write_file'))
 // ------------------------------------------------------------------------
 
 /**
+ * 删除文件夹下的文件
+ * 1--递归删除
+ * 2--del_dir可以指定删除文件夹(ci的注释真顽皮，用了nuked核爆)
  * Delete Files
  *
  * Deletes all files contained in the supplied directory path.

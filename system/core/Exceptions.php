@@ -69,6 +69,7 @@ class CI_Exceptions {
 	 */
 	public function __construct()
 	{
+        // 利用缓存机制，返回错误信息
 		$this->ob_level = ob_get_level();
 		// Note:  Do not log messages from this constructor.
 	}
@@ -146,7 +147,6 @@ class CI_Exceptions {
 	 */
 	function show_error($heading, $message, $template = 'error_general', $status_code = 500)
 	{
-		
 		// 设定header
 		set_status_header($status_code);
 

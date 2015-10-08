@@ -63,6 +63,7 @@ class CI_DB_driver {
 
 	// Private variables
 	var $_protect_identifiers	= TRUE;
+    // 不应该转义的标示符
 	var $_reserved_identifiers	= array('*'); // Identifiers that should NOT be escaped
 
 	// These are use with Oracle
@@ -73,6 +74,7 @@ class CI_DB_driver {
 
 
 	/**
+     * 构造方法，根据参数，给私有属性赋值
 	 * Constructor.  Accepts one parameter containing the database
 	 * connection settings.
 	 *
@@ -94,6 +96,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 连接数据库--选择db--设置字符集
 	 * Initialize Database Settings
 	 *
 	 * @access	private Called by the constructor
@@ -104,6 +107,7 @@ class CI_DB_driver {
 	{
 		// If an existing connection resource is available
 		// there is no need to connect and select the database
+        // 不重复连接
 		if (is_resource($this->conn_id) OR is_object($this->conn_id))
 		{
 			return TRUE;
@@ -112,6 +116,7 @@ class CI_DB_driver {
 		// ----------------------------------------------------------------
 
 		// Connect to the database and set the connection ID
+        // 连接数据库，保存连接(根据配置，是否使用pconnect)
 		$this->conn_id = ($this->pconnect == FALSE) ? $this->db_connect() : $this->db_pconnect();
 
 		// No connection resource?  Throw an error
@@ -129,6 +134,7 @@ class CI_DB_driver {
 		// ----------------------------------------------------------------
 
 		// Select the DB... assuming a database name is specified in the config file
+        // 设置数据库名称
 		if ($this->database != '')
 		{
 			if ( ! $this->db_select())
@@ -144,6 +150,7 @@ class CI_DB_driver {
 			else
 			{
 				// We've selected the DB. Now we set the character set
+                // 设置字符集
 				if ( ! $this->db_set_charset($this->char_set, $this->dbcollat))
 				{
 					return FALSE;
@@ -159,6 +166,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置客户端字符集
 	 * Set client character set
 	 *
 	 * @access	public
@@ -186,6 +194,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取驱动类型
 	 * The name of the platform in use (mysql, mssql, etc...)
 	 *
 	 * @access	public
@@ -199,6 +208,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取数据库版本
 	 * Database Version Number.  Returns a string containing the
 	 * version of the database being used
 	 *
@@ -218,6 +228,7 @@ class CI_DB_driver {
 
 		// Some DBs have functions that return the version, and don't run special
 		// SQL queries per se. In these instances, just return the result.
+        // 显然pdo也在其中
 		$driver_version_exceptions = array('oci8', 'sqlite', 'cubrid');
 
 		if (in_array($this->dbdriver, $driver_version_exceptions))
@@ -234,6 +245,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 执行sql语句
 	 * Execute the query
 	 *
 	 * Accepts an SQL string as input and returns a result object upon
@@ -249,6 +261,7 @@ class CI_DB_driver {
 	 */
 	function query($sql, $binds = FALSE, $return_object = TRUE)
 	{
+        // sql不为空
 		if ($sql == '')
 		{
 			if ($this->db_debug)
@@ -260,12 +273,14 @@ class CI_DB_driver {
 		}
 
 		// Verify table prefix and replace if necessary
+        // 添加前缀
 		if ( ($this->dbprefix != '' AND $this->swap_pre != '') AND ($this->dbprefix != $this->swap_pre) )
 		{
 			$sql = preg_replace("/(\W)".$this->swap_pre."(\S+?)/", "\\1".$this->dbprefix."\\2", $sql);
 		}
 
 		// Compile binds if needed
+        // 替换变量
 		if ($binds !== FALSE)
 		{
 			$sql = $this->compile_binds($sql, $binds);
@@ -274,6 +289,8 @@ class CI_DB_driver {
 		// Is query caching enabled?  If the query is a "read type"
 		// we will load the caching class and return the previously
 		// cached query if it exists
+        // read类型的sql根据配置返回缓存
+        // 根据select字符串来判定是否是查询语句?
 		if ($this->cache_on == TRUE AND stristr($sql, 'SELECT'))
 		{
 			if ($this->_cache_init())
@@ -287,15 +304,18 @@ class CI_DB_driver {
 		}
 
 		// Save the  query for debugging
+        // 存储sql语句，用来调试
 		if ($this->save_queries == TRUE)
 		{
 			$this->queries[] = $sql;
 		}
 
 		// Start the Query Timer
+        // 开始计时器
 		$time_start = list($sm, $ss) = explode(' ', microtime());
 
 		// Run the Query
+        // sql准备好，执行
 		if (FALSE === ($this->result_id = $this->simple_query($sql)))
 		{
 			if ($this->save_queries == TRUE)
@@ -304,8 +324,10 @@ class CI_DB_driver {
 			}
 
 			// This will trigger a rollback if transactions are being used
+            // 查询出错，给事务做标记，用来回滚
 			$this->_trans_status = FALSE;
 
+            // 展示错误
 			if ($this->db_debug)
 			{
 				// grab the error number and message now, as we might run some
@@ -334,23 +356,28 @@ class CI_DB_driver {
 		}
 
 		// Stop and aggregate the query time results
+        // 停止计时器，计时
 		$time_end = list($em, $es) = explode(' ', microtime());
 		$this->benchmark += ($em + $es) - ($sm + $ss);
 
+        // 记录执行时间
 		if ($this->save_queries == TRUE)
 		{
 			$this->query_times[] = ($em + $es) - ($sm + $ss);
 		}
 
 		// Increment the query counter
+        // 查询次数计数
 		$this->query_count++;
 
 		// Was the query a "write" type?
 		// If so we'll simply return true
+        // write类型的sql，直接返回true
 		if ($this->is_write_type($sql) === TRUE)
 		{
 			// If caching is enabled we'll auto-cleanup any
 			// existing files related to this particular URI
+            // 如果打开了缓存，将当前uri关联的缓存删除(明显这里也删除的不够)
 			if ($this->cache_on == TRUE AND $this->cache_autodel == TRUE AND $this->_cache_init())
 			{
 				$this->CACHE->delete();
@@ -368,7 +395,7 @@ class CI_DB_driver {
 		}
 
 		// Load and instantiate the result driver
-
+        // 加载一个结果驱动
 		$driver			= $this->load_rdriver();
 		$RES			= new $driver();
 		$RES->conn_id	= $this->conn_id;
@@ -383,10 +410,12 @@ class CI_DB_driver {
 		}
 
 		// oci8 vars must be set before calling this
+        // 受影响的结果的行数
 		$RES->num_rows	= $RES->num_rows();
 
 		// Is query caching enabled?  If so, we'll serialize the
 		// result object and save it to a cache file.
+        // 缓存
 		if ($this->cache_on == TRUE AND $this->_cache_init())
 		{
 			// We'll create a new instance of the result object
@@ -413,6 +442,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 加载一个结果驱动
 	 * Load the result drivers
 	 *
 	 * @access	public
@@ -434,6 +464,9 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 执行简单sql
+     * 1-- 为了确保db_connection已经建立，所以不直接调用底层的execute
+     * 2-- 这里只执行一些简单的sql(这些sql与用户输入没有任何关联，也不会产生sql注入)
 	 * Simple Query
 	 * This is a simplified version of the query() function.  Internally
 	 * we only use it when running transaction commands since they do
@@ -456,6 +489,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 关闭事务
 	 * Disable Transactions
 	 * This permits transactions to be disabled at run-time.
 	 *
@@ -487,6 +521,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 开始事务
 	 * Start Transaction
 	 *
 	 * @access	public
@@ -500,6 +535,7 @@ class CI_DB_driver {
 		}
 
 		// When transactions are nested we only begin/commit/rollback the outermost ones
+        // 可以嵌套事务，但是只处理最外层的
 		if ($this->_trans_depth > 0)
 		{
 			$this->_trans_depth += 1;
@@ -512,6 +548,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 结束事务
 	 * Complete Transaction
 	 *
 	 * @access	public
@@ -555,6 +592,8 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取事务状态
+     * 1--用作业务逻辑的判定，是否需要记录错误日志&&返货错误信息
 	 * Lets you retrieve the transaction flag to determine if it has failed
 	 *
 	 * @access	public
@@ -568,6 +607,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 替换绑定值
 	 * Compile Bindings
 	 *
 	 * @access	public
@@ -577,21 +617,25 @@ class CI_DB_driver {
 	 */
 	function compile_binds($sql, $binds)
 	{
+        // 是否有绑定值标记
 		if (strpos($sql, $this->bind_marker) === FALSE)
 		{
 			return $sql;
 		}
 
+        // 按照数组处理
 		if ( ! is_array($binds))
 		{
 			$binds = array($binds);
 		}
 
 		// Get the sql segments around the bind markers
+        // 根据绑定标记，切割sql
 		$segments = explode($this->bind_marker, $sql);
 
 		// The count of bind should be 1 less then the count of segments
 		// If there are more bind arguments trim it down
+        // 绑定值必须比被分开段少一个，多余的去除。
 		if (count($binds) >= count($segments)) {
 			$binds = array_slice($binds, 0, count($segments)-1);
 		}
@@ -601,6 +645,7 @@ class CI_DB_driver {
 		$i = 0;
 		foreach ($binds as $bind)
 		{
+            // 绑定值转义
 			$result .= $this->escape($bind);
 			$result .= $segments[++$i];
 		}
@@ -611,6 +656,8 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 判定一个查询语句是否市write类型的
+     * 在sql开始处(出去空格之外)如果匹配到set/update/delete等句子, 则是write类型
 	 * Determines if a query is a "write" type.
 	 *
 	 * @access	public
@@ -629,6 +676,8 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 计算总的查询时间
+     * 1--总查询时间指当前db connection中执行的所有sql的时间
 	 * Calculate the aggregate query elapsed time
 	 *
 	 * @access	public
@@ -643,6 +692,8 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 查询次数
+     * 1--同上
 	 * Returns the total number of queries
 	 *
 	 * @access	public
@@ -656,6 +707,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 返回最后一条sql语句
 	 * Returns the last query that was executed
 	 *
 	 * @access	public
@@ -669,6 +721,9 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 转义字符，不能处理数组
+     * 1--调用mysql方法
+     * 2--需要重点关注
 	 * "Smart" Escape String
 	 *
 	 * Escapes data based on type
@@ -686,6 +741,7 @@ class CI_DB_driver {
 		}
 		elseif (is_bool($str))
 		{
+            // mysql中1代表true，0代表false
 			$str = ($str === FALSE) ? 0 : 1;
 		}
 		elseif (is_null($str))
@@ -699,6 +755,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     *
 	 * Escape LIKE String
 	 *
 	 * Calls the individual driver for platform
@@ -716,6 +773,8 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取主键
+     * 1--默认主键是第一个字段
 	 * Primary
 	 *
 	 * Retrieves the primary key.  It assumes that the row in the first
@@ -799,6 +858,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取mysql表的字段名称
 	 * Fetch MySQL Field Names
 	 *
 	 * @access	public
@@ -808,11 +868,13 @@ class CI_DB_driver {
 	function list_fields($table = '')
 	{
 		// Is there a cached result?
+        // 是否有缓存的
 		if (isset($this->data_cache['field_names'][$table]))
 		{
 			return $this->data_cache['field_names'][$table];
 		}
 
+        // 表名称不为空
 		if ($table == '')
 		{
 			if ($this->db_debug)
@@ -822,6 +884,7 @@ class CI_DB_driver {
 			return FALSE;
 		}
 
+        // 获取查询语句
 		if (FALSE === ($sql = $this->_list_columns($table)))
 		{
 			if ($this->db_debug)
@@ -831,6 +894,7 @@ class CI_DB_driver {
 			return FALSE;
 		}
 
+        // 查询
 		$query = $this->query($sql);
 
 		$retval = array();
@@ -853,6 +917,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 判定表中是否存在某个列
 	 * Determine if a particular field exists
 	 * @access	public
 	 * @param	string
@@ -867,6 +932,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取表结构
 	 * Returns an object with field data
 	 *
 	 * @access	public
@@ -892,6 +958,9 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 生成一条insert语句
+     * 1--仅仅是生成一条sql语句，不做其他操作
+     * insert
 	 * Generate an insert string
 	 *
 	 * @access	public
@@ -906,7 +975,9 @@ class CI_DB_driver {
 
 		foreach ($data as $key => $val)
 		{
+            // 转义字段名称name=>`name`
 			$fields[] = $this->_escape_identifiers($key);
+            // 转义value
 			$values[] = $this->escape($val);
 		}
 
@@ -916,6 +987,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 生成一条update语句
 	 * Generate an update string
 	 *
 	 * @access	public
@@ -926,6 +998,7 @@ class CI_DB_driver {
 	 */
 	function update_string($table, $data, $where)
 	{
+        // 必须是有条件的更新
 		if ($where == '')
 		{
 			return false;
@@ -934,6 +1007,7 @@ class CI_DB_driver {
 		$fields = array();
 		foreach ($data as $key => $val)
 		{
+            // 转义字段 and value
 			$fields[$this->_protect_identifiers($key)] = $this->escape($val);
 		}
 
@@ -950,6 +1024,7 @@ class CI_DB_driver {
 
 				if ($val !== '')
 				{
+                    // where中如果没有符号，默认是=
 					if ( ! $this->_has_operator($key))
 					{
 						$key .= ' =';
@@ -962,12 +1037,15 @@ class CI_DB_driver {
 			}
 		}
 
+        // 组装set table key=value where
 		return $this->_update($this->_protect_identifiers($table, TRUE, NULL, FALSE), $fields, $dest);
 	}
 
 	// --------------------------------------------------------------------
 
 	/**
+     * 判定sql中是否含有操作符
+     * 1--不包含like
 	 * Tests whether the string has an SQL operator
 	 *
 	 * @access	private
@@ -976,6 +1054,7 @@ class CI_DB_driver {
 	 */
 	function _has_operator($str)
 	{
+        // 疑问：虽然去掉了首位的空格，str中的制表符被当做操作符，也不一定正确
 		$str = trim($str);
 		if ( ! preg_match("/(\s|<|>|!|=|is null|is not null)/i", $str))
 		{
@@ -988,6 +1067,8 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 调用php原生的方法
+     * 1--通常需要传递参数进来，例如conn_id
 	 * Enables a native PHP function to be run, using a platform agnostic wrapper.
 	 *
 	 * @access	public
@@ -1029,6 +1110,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 设置缓存的位置
 	 * Set Cache Directory Path
 	 *
 	 * @access	public
@@ -1043,6 +1125,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 打开缓存
 	 * Enable Query Caching
 	 *
 	 * @access	public
@@ -1057,6 +1140,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 关闭缓存
 	 * Disable Query Caching
 	 *
 	 * @access	public
@@ -1072,6 +1156,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 删除当前URI的缓存
 	 * Delete the cache files associated with a particular URI
 	 *
 	 * @access	public
@@ -1089,6 +1174,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 删除所有缓存
 	 * Delete All cache files
 	 *
 	 * @access	public
@@ -1107,6 +1193,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 初始化缓存对象
 	 * Initialize the Cache Class
 	 *
 	 * @access	private
@@ -1134,6 +1221,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 关闭数据库连接
 	 * Close DB Connection
 	 *
 	 * @access	public
@@ -1151,6 +1239,7 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 展示错误信息
 	 * Display an error message
 	 *
 	 * @access	public
@@ -1217,6 +1306,8 @@ class CI_DB_driver {
 	// --------------------------------------------------------------------
 
 	/**
+     * 增加db_prefix
+     * 1--还有更多逻辑，暂时没完全看明白
 	 * Protect Identifiers
 	 *
 	 * This function is used extensively by the Active Record class, and by
@@ -1250,6 +1341,7 @@ class CI_DB_driver {
 			$protect_identifiers = $this->_protect_identifiers;
 		}
 
+        // 递归处理数组
 		if (is_array($item))
 		{
 			$escaped_array = array();
@@ -1263,10 +1355,12 @@ class CI_DB_driver {
 		}
 
 		// Convert tabs or multiple spaces into single spaces
+        // 去除多余的空格或者制表符
 		$item = preg_replace('/[\t ]+/', ' ', $item);
 
 		// If the item has an alias declaration we remove it and set it aside.
 		// Basically we remove everything to the right of the first space
+        // 提取出别名
 		if (strpos($item, ' ') !== FALSE)
 		{
 			$alias = strstr($item, ' ');
@@ -1289,6 +1383,7 @@ class CI_DB_driver {
 		// Break the string apart if it contains periods, then insert the table prefix
 		// in the correct location, assuming the period doesn't indicate that we're dealing
 		// with an alias. While we're at it, we will escape the components
+        // 如果item是这样的: host.database.table.column
 		if (strpos($item, '.') !== FALSE)
 		{
 			$parts	= explode('.', $item);
@@ -1314,6 +1409,7 @@ class CI_DB_driver {
 			}
 
 			// Is there a table prefix defined in the config file?  If not, no need to do anything
+            // 是否有表前缀
 			if ($this->dbprefix != '')
 			{
 				// We now add the table prefix based on some logic.
@@ -1338,6 +1434,7 @@ class CI_DB_driver {
 
 				// This flag is set when the supplied $item does not contain a field name.
 				// This can happen when this function is being called from a JOIN.
+                // 如果没有列名，需要往前挪一个
 				if ($field_exists == FALSE)
 				{
 					$i++;

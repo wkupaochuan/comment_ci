@@ -27,6 +27,7 @@
 class CI_DB_mysql_result extends CI_DB_result {
 
 	/**
+     * 查询结果的行数
 	 * Number of rows in the result set
 	 *
 	 * @access	public
@@ -107,6 +108,7 @@ class CI_DB_mysql_result extends CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 释放查询结果资源
 	 * Free the result
 	 *
 	 * @return	null
@@ -123,6 +125,7 @@ class CI_DB_mysql_result extends CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 移动游标
 	 * Data Seek
 	 *
 	 * Moves the internal pointer to the desired offset.  We call
@@ -140,6 +143,7 @@ class CI_DB_mysql_result extends CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 按数关联数组方式，查询一行
 	 * Result - associative array
 	 *
 	 * Returns the result set as an array
@@ -155,6 +159,7 @@ class CI_DB_mysql_result extends CI_DB_result {
 	// --------------------------------------------------------------------
 
 	/**
+     * 按对象方式，查询一行
 	 * Result - object
 	 *
 	 * Returns the result set as an object

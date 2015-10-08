@@ -483,6 +483,7 @@ class CI_DB_pdo_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取错误信息
 	 * The error message string
 	 *
 	 * @access	private
@@ -751,6 +752,7 @@ class CI_DB_pdo_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 获取limit语句
 	 * Limit string
 	 *
 	 * Generates a platform-specific LIMIT clause
@@ -792,6 +794,7 @@ class CI_DB_pdo_driver extends CI_DB {
 	// --------------------------------------------------------------------
 
 	/**
+     * 关闭数据库连接
 	 * Close DB Connection
 	 *
 	 * @access	public

@@ -19,9 +19,44 @@ class Welcome extends CI_Controller {
 	 */
 	public function index()
 	{
-        $this->load->library('log');
-        $this->log->write_log('debug', 'i am debug!');
-        $this->log->my_write_log('info', 'i am info!', true);
+//        return 'ahh';
+        $this->load->database();
+
+        $sql = <<<SQL
+INSERT INTO `test` (`id`, `name`) VALUES (xx, ddd)
+SQL;
+
+        $res = $this->db->query($sql, 12);
+
+        var_dump($res);exit;
+
+
+
+//        $a = null;
+//        var_dump($a);
+//        show_error('i am testing');
+//        ob_start();
+//        echo 'hello';//此处并不会在页面中输出
+//        $a = ob_get_level();
+//        $b = ob_get_contents();//获得缓存结果,赋予变量
+//        ob_clean();
+//        ob_start();
+//        echo 'world';//此处并不会在页面中输出
+//        $c = ob_get_level();
+//        $d = ob_get_contents();//获得缓存结果,赋予变量
+//        ob_clean();
+//        ob_start();
+//        echo 'hi';//此处并不会在页面中输出
+//        $e = ob_get_level();
+//        $f = ob_get_contents();//获得缓存结果,赋予变量
+//        ob_clean();
+//
+//        echo 'level:'.$a.',ouput:'.$b.'<br>';
+//        echo 'level:'.$c.',ouput:'.$d.'<br>';
+//        echo 'level:'.$e.',ouput:'.$f.'<br>';
+//        $this->load->library('log');
+//        $this->log->write_log('debug', 'i am debug!');
+//        $this->log->my_write_log('info', 'i am info!', true);
 //        $this->config->load('test_folder/test.php', true);
 //        echo $this->config->item('my_name', 'test_folder/test');
 //		echo ip2long('000.000.000.100'); exit;

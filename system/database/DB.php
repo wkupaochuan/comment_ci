@@ -166,6 +166,7 @@ function &DB($params = '', $active_record_override = NULL)
 
 		if ( ! class_exists('CI_DB'))
 		{
+            // 执行代码
 			eval('class CI_DB extends CI_DB_active_record { }');
 		}
 	}
@@ -187,6 +188,7 @@ function &DB($params = '', $active_record_override = NULL)
 	$DB = new $driver($params);
 
 	// 是否自动初始化
+    // db_driver中都是自动加载的
 	if ($DB->autoinit == TRUE)
 	{
 		$DB->initialize();
